@@ -296,15 +296,7 @@ function TranslateTab({ activePet, pets, avatarUrls }: { activePet: Pet | null; 
           <Sparkles className="h-4 w-4 text-accent" /> Resultado
         </h2>
 
-        {loading && (
-          <div className="flex flex-col items-center justify-center gap-3 py-16 text-muted-foreground">
-            <div className="relative">
-              <div className="absolute inset-0 animate-ping rounded-full bg-primary/30" />
-              <Loader2 className="relative h-8 w-8 animate-spin text-primary" />
-            </div>
-            <span className="text-sm">Analizando con etología...</span>
-          </div>
-        )}
+        {loading && <AnalyzingScreen petName={activePet?.name ?? "tu mascota"} />}
 
         {!loading && !result && (
           <div className="flex flex-col items-center justify-center gap-3 py-16 text-center text-muted-foreground">
