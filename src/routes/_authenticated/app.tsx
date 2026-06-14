@@ -81,33 +81,45 @@ function PetAvatar({ pet, url, size = 44, ring = false }: { pet: Pet | null; url
   );
 }
 
-/* ---------- Mood / Intent visual mapping (premium icons) ---------- */
-function moodVisual(mood: string | null | undefined) {
+/* ---------- Mood / Intent visual mapping (premium Lucide icons) ---------- */
+type LucideType = typeof Smile;
+function moodVisual(mood: string | null | undefined): { Icon: LucideType; color: string; label: string } {
   const m = (mood ?? "").toLowerCase();
-  if (/(felic|alegr|content|jugue|excit)/.test(m)) return { emoji: "😄", color: "from-amber-400 to-orange-500" };
-  if (/(triste|melanc|solo)/.test(m)) return { emoji: "🥺", color: "from-sky-400 to-indigo-500" };
-  if (/(enoj|molest|frust|agresi|enfad)/.test(m)) return { emoji: "😤", color: "from-rose-500 to-red-600" };
-  if (/(miedo|asust|ansios|nervi|estres)/.test(m)) return { emoji: "😨", color: "from-violet-400 to-purple-600" };
-  if (/(relaj|calm|tranq|som)/.test(m)) return { emoji: "😌", color: "from-emerald-400 to-teal-500" };
-  if (/(curi|alert|atent)/.test(m)) return { emoji: "🧐", color: "from-cyan-400 to-blue-500" };
-  if (/(hambr|comida|sed)/.test(m)) return { emoji: "🍖", color: "from-amber-500 to-rose-500" };
-  if (/(cariñ|amor|afect)/.test(m)) return { emoji: "🥰", color: "from-pink-400 to-rose-500" };
-  return { emoji: "🐾", color: "from-primary to-accent" };
+  if (/(felic|alegr|content|jugue|excit)/.test(m)) return { Icon: Smile, color: "from-amber-400 to-orange-500", label: "feliz" };
+  if (/(triste|melanc|solo)/.test(m)) return { Icon: Frown, color: "from-sky-400 to-indigo-500", label: "triste" };
+  if (/(enoj|molest|frust|agresi|enfad)/.test(m)) return { Icon: Flame, color: "from-rose-500 to-red-600", label: "enojado" };
+  if (/(miedo|asust|ansios|nervi|estres)/.test(m)) return { Icon: ShieldAlert, color: "from-violet-400 to-purple-600", label: "asustado" };
+  if (/(relaj|calm|tranq|som)/.test(m)) return { Icon: Sun, color: "from-emerald-400 to-teal-500", label: "relajado" };
+  if (/(curi|alert|atent)/.test(m)) return { Icon: Eye, color: "from-cyan-400 to-blue-500", label: "alerta" };
+  if (/(hambr|comida|sed)/.test(m)) return { Icon: Utensils, color: "from-amber-500 to-rose-500", label: "hambriento" };
+  if (/(cariñ|amor|afect)/.test(m)) return { Icon: HeartHandshake, color: "from-pink-400 to-rose-500", label: "cariñoso" };
+  if (/(energ|hiper)/.test(m)) return { Icon: Zap, color: "from-yellow-400 to-amber-500", label: "enérgico" };
+  return { Icon: PawPrint, color: "from-primary to-accent", label: mood ?? "indefinido" };
 }
 
-function intentEmoji(intent: string | null | undefined) {
+function intentIcon(intent: string | null | undefined): LucideType {
   const i = (intent ?? "").toLowerCase();
-  if (/(juga|jueg)/.test(i)) return "🎾";
-  if (/(comer|comid|hambr)/.test(i)) return "🍖";
-  if (/(salir|paseo|caminar)/.test(i)) return "🚶";
-  if (/(atenc|mira|cari)/.test(i)) return "💖";
-  if (/(alerta|aviso|vigil|defen|protec)/.test(i)) return "🛡️";
-  if (/(miedo|huir|escond)/.test(i)) return "🙈";
-  if (/(saluda|hola)/.test(i)) return "👋";
-  if (/(dorm|descan|sue)/.test(i)) return "😴";
-  if (/(agua|sed|beber)/.test(i)) return "💧";
-  return "🎯";
+  if (/(juga|jueg)/.test(i)) return Bone;
+  if (/(comer|comid|hambr)/.test(i)) return Utensils;
+  if (/(salir|paseo|caminar)/.test(i)) return Footprints;
+  if (/(atenc|mira|cari)/.test(i)) return Heart;
+  if (/(alerta|aviso|vigil|defen|protec)/.test(i)) return ShieldAlert;
+  if (/(miedo|huir|escond)/.test(i)) return Wind;
+  if (/(saluda|hola)/.test(i)) return HeartHandshake;
+  if (/(dorm|descan|sue)/.test(i)) return Moon;
+  if (/(agua|sed|beber)/.test(i)) return Wind;
+  return HelpCircle;
 }
+
+/* ---------- Postura y contexto por especie ---------- */
+const POSTURES: Record<"dog" | "cat", string[]> = {
+  dog: ["Relajado", "Alerta", "Juguetón", "Sumiso", "Agresivo", "Asustado", "Cansado"],
+  cat: ["Relajado", "Alerta", "Defensivo", "Juguetón", "Asustado", "Cazando", "Acurrucado"],
+};
+const CONTEXTS: Record<"dog" | "cat", string[]> = {
+  dog: ["Llegada a casa", "Hora de comida", "Hora del paseo", "Jugando", "A dormir", "Visitas", "Solo en casa", "Después del baño", "En el parque"],
+  cat: ["Hora de comida", "Jugando", "Caja de arena", "En la ventana", "Despertando", "Visitas", "Pidiendo caricias", "Después de cazar"],
+};
 
 function AppPage() {
   const navigate = useNavigate();
