@@ -380,12 +380,13 @@ function ChipPicker({ label, icon, value, onChange, options }: { label: string; 
   );
 }
 
-function ResultCard({ result, pet, petUrl }: { result: TranslationResult; pet: Pet | null; petUrl?: string }) {
+function ResultCard({ result, pet, petUrl, posture, context }: { result: TranslationResult; pet: Pet | null; petUrl?: string; posture?: string; context?: string }) {
   const m = moodVisual(result.mood);
+  const IIcon = intentIcon(result.intent);
   return (
     <div className="space-y-5">
       <div className={`relative overflow-hidden rounded-3xl bg-gradient-to-br ${m.color} p-6 text-white shadow-glow`}>
-        <div className="absolute -right-6 -top-6 text-[140px] leading-none opacity-20 select-none">{m.emoji}</div>
+        <m.Icon className="absolute -right-6 -top-6 h-44 w-44 text-white/15" strokeWidth={1.4} />
         <div className="relative flex items-start gap-4">
           {pet && <PetAvatar pet={pet} url={petUrl} size={56} ring />}
           <div className="flex-1">
@@ -398,12 +399,12 @@ function ResultCard({ result, pet, petUrl }: { result: TranslationResult; pet: P
         <div className="relative mt-5 flex flex-wrap gap-2 text-xs">
           {result.mood && (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-black/25 px-3 py-1.5 backdrop-blur">
-              <span>{m.emoji}</span> {result.mood}
+              <m.Icon className="h-3.5 w-3.5" /> {result.mood}
             </span>
           )}
           {result.intent && (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-black/25 px-3 py-1.5 backdrop-blur">
-              <span>{intentEmoji(result.intent)}</span> {result.intent}
+              <IIcon className="h-3.5 w-3.5" /> {result.intent}
             </span>
           )}
           {typeof result.confidence === "number" && (
@@ -414,8 +415,23 @@ function ResultCard({ result, pet, petUrl }: { result: TranslationResult; pet: P
         </div>
       </div>
 
+      {(posture || context) && (
+        <div className="flex flex-wrap gap-2 text-xs">
+          {posture && (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card/60 px-3 py-1.5 text-muted-foreground">
+              <PawPrint className="h-3.5 w-3.5 text-primary" /> Postura: <strong className="text-foreground">{posture}</strong>
+            </span>
+          )}
+          {context && (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card/60 px-3 py-1.5 text-muted-foreground">
+              <Sparkles className="h-3.5 w-3.5 text-accent" /> Contexto: <strong className="text-foreground">{context}</strong>
+            </span>
+          )}
+        </div>
+      )}
+
       {result.scientific_basis && (
-        <div className="rounded-2xl border border-border bg-card/60 p-5">
+        <div className="glass-card rounded-2xl p-5">
           <div className="mb-2 flex items-center gap-2 text-sm font-medium">
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/15 text-primary">
               <Brain className="h-4 w-4" />
@@ -427,7 +443,7 @@ function ResultCard({ result, pet, petUrl }: { result: TranslationResult; pet: P
       )}
 
       {result.tips && result.tips.length > 0 && (
-        <div className="rounded-2xl border border-border bg-card/60 p-5">
+        <div className="glass-card rounded-2xl p-5">
           <div className="mb-3 flex items-center gap-2 text-sm font-medium">
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/15 text-accent">
               <Lightbulb className="h-4 w-4" />
