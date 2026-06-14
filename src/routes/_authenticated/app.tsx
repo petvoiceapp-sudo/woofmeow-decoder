@@ -234,8 +234,11 @@ function TranslateTab({ activePet, pets, avatarUrls }: { activePet: Pet | null; 
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<TranslationResult | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [posture, setPosture] = useState<string>("");
+  const [context, setContext] = useState<string>("");
 
   useEffect(() => { if (activePet) setSpecies(activePet.species); }, [activePet]);
+  useEffect(() => { setPosture(""); setContext(""); }, [species]);
 
   async function onRecorded({ base64, format, durationMs, blobUrl }: { base64: string; format: string; durationMs: number; blobUrl: string }) {
     setAudioUrl(blobUrl);
@@ -250,6 +253,8 @@ function TranslateTab({ activePet, pets, avatarUrls }: { activePet: Pet | null; 
           petId: activePet?.id ?? null,
           petName: activePet?.name,
           durationMs,
+          posture: posture || undefined,
+          context: context || undefined,
         },
       });
       setResult(res.result);
@@ -266,7 +271,7 @@ function TranslateTab({ activePet, pets, avatarUrls }: { activePet: Pet | null; 
 
   return (
     <div className="grid gap-6 md:grid-cols-[1fr_1.2fr]">
-      <div className="glass rounded-3xl p-8 shadow-card">
+      <div className="glass-card rounded-3xl p-8">
         <div className="mb-6 flex items-center justify-between">
           <h2 className="flex items-center gap-2 text-lg font-semibold">
             <Volume2 className="h-4 w-4 text-primary" /> Grabar sonido
@@ -297,19 +302,35 @@ function TranslateTab({ activePet, pets, avatarUrls }: { activePet: Pet | null; 
           </div>
         )}
 
+        <ChipPicker
+          label="Postura actual"
+          icon={<PawPrint className="h-3.5 w-3.5" />}
+          value={posture}
+          onChange={setPosture}
+          options={POSTURES[species]}
+        />
+        <div className="h-3" />
+        <ChipPicker
+          label="Contexto / situación"
+          icon={<Sparkles className="h-3.5 w-3.5" />}
+          value={context}
+          onChange={setContext}
+          options={CONTEXTS[species]}
+        />
+
         <div className="flex flex-col items-center gap-6 py-6">
           <Recorder onRecorded={onRecorded} disabled={loading} />
           {audioUrl && <audio src={audioUrl} controls className="w-full" />}
         </div>
 
         {pets.length === 0 && (
-          <p className="mt-4 rounded-xl bg-muted/40 p-3 text-center text-xs text-muted-foreground">
+          <p className="mt-2 rounded-xl bg-muted/40 p-3 text-center text-xs text-muted-foreground">
             💡 Agrega una mascota para guardar traducciones asociadas a ella.
           </p>
         )}
       </div>
 
-      <div className="glass rounded-3xl p-8 shadow-card">
+      <div className="glass-card rounded-3xl p-8">
         <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold">
           <Sparkles className="h-4 w-4 text-accent" /> Resultado
         </h2>
@@ -318,12 +339,42 @@ function TranslateTab({ activePet, pets, avatarUrls }: { activePet: Pet | null; 
 
         {!loading && !result && (
           <div className="flex flex-col items-center justify-center gap-3 py-16 text-center text-muted-foreground">
-            <div className="text-5xl">🐾</div>
-            <p className="max-w-xs text-sm">Graba un sonido para descubrir qué intenta decirte tu mascota.</p>
+            <PawPrint className="h-12 w-12 text-primary/60" />
+            <p className="max-w-xs text-sm">Selecciona postura y contexto (opcional), graba un sonido y descubre qué intenta decirte tu mascota.</p>
           </div>
         )}
 
-        {result && <ResultCard result={result} pet={activePet} petUrl={petUrl} />}
+        {result && <ResultCard result={result} pet={activePet} petUrl={petUrl} posture={posture} context={context} />}
+      </div>
+    </div>
+  );
+}
+
+/* -------- ChipPicker (postura / contexto) -------- */
+function ChipPicker({ label, icon, value, onChange, options }: { label: string; icon: React.ReactNode; value: string; onChange: (v: string) => void; options: string[] }) {
+  return (
+    <div>
+      <div className="mb-2 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-widest text-muted-foreground">
+        {icon} {label}
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        {options.map((o) => {
+          const active = value === o;
+          return (
+            <button
+              key={o}
+              type="button"
+              onClick={() => onChange(active ? "" : o)}
+              className={`rounded-full px-3 py-1.5 text-xs transition ${
+                active
+                  ? "bg-brand text-primary-foreground shadow-glow ring-1 ring-primary/40"
+                  : "bg-card/60 text-muted-foreground hover:text-foreground hover:bg-card"
+              }`}
+            >
+              {o}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
