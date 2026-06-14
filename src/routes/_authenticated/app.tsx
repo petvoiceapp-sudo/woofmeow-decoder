@@ -13,6 +13,8 @@ import { translateSound, type TranslationResult } from "@/lib/translate.function
 import { chatWithPet } from "@/lib/chat.functions";
 import { Recorder } from "@/components/Recorder";
 import logo from "@/assets/logo.png";
+import dogCard from "@/assets/dog-card.png";
+import catCard from "@/assets/cat-card.png";
 
 export const Route = createFileRoute("/_authenticated/app")({
   component: AppPage,
@@ -170,7 +172,7 @@ function AppPage() {
       <main className="mx-auto max-w-6xl px-4 py-8">
         {tab === "translate" && <TranslateTab activePet={activePet} pets={pets} avatarUrls={avatarUrls} />}
         {tab === "pets" && <PetsTab pets={pets} avatarUrls={avatarUrls} />}
-        {tab === "history" && <HistoryTab pets={pets} avatarUrls={avatarUrls} />}
+        {tab === "history" && <HistoryTab pets={pets} avatarUrls={avatarUrls} activePet={activePet} onChangeActive={setActivePetId} />}
         {tab === "chat" && <ChatTab activePet={activePet} avatarUrls={avatarUrls} />}
       </main>
     </div>
@@ -294,15 +296,7 @@ function TranslateTab({ activePet, pets, avatarUrls }: { activePet: Pet | null; 
           <Sparkles className="h-4 w-4 text-accent" /> Resultado
         </h2>
 
-        {loading && (
-          <div className="flex flex-col items-center justify-center gap-3 py-16 text-muted-foreground">
-            <div className="relative">
-              <div className="absolute inset-0 animate-ping rounded-full bg-primary/30" />
-              <Loader2 className="relative h-8 w-8 animate-spin text-primary" />
-            </div>
-            <span className="text-sm">Analizando con etología...</span>
-          </div>
-        )}
+        {loading && <AnalyzingScreen petName={activePet?.name ?? "tu mascota"} />}
 
         {!loading && !result && (
           <div className="flex flex-col items-center justify-center gap-3 py-16 text-center text-muted-foreground">
@@ -491,11 +485,10 @@ function PetsTab({ pets, avatarUrls }: { pets: Pet[]; avatarUrls: Record<string,
             </label>
 
             <div className="grid w-full flex-1 gap-3 md:grid-cols-2">
-              <input required value={name} onChange={(e) => setName(e.target.value)} placeholder="Nombre" className="rounded-xl border border-border bg-input/40 px-3 py-2.5 text-sm outline-none focus:border-primary" />
-              <select value={species} onChange={(e) => setSpecies(e.target.value as "dog" | "cat")} className="rounded-xl border border-border bg-input/40 px-3 py-2.5 text-sm">
-                <option value="dog">🐶 Perro</option>
-                <option value="cat">🐱 Gato</option>
-              </select>
+              <input required value={name} onChange={(e) => setName(e.target.value)} placeholder="Nombre" className="rounded-xl border border-border bg-input/40 px-3 py-2.5 text-sm outline-none focus:border-primary md:col-span-2" />
+              <div className="md:col-span-2">
+                <SpeciesPicker value={species} onChange={setSpecies} />
+              </div>
               <input value={breed} onChange={(e) => setBreed(e.target.value)} placeholder="Raza (opcional)" className="rounded-xl border border-border bg-input/40 px-3 py-2.5 text-sm outline-none focus:border-primary" />
               <input type="number" min={0} max={40} value={age} onChange={(e) => setAge(e.target.value)} placeholder="Edad (años)" className="rounded-xl border border-border bg-input/40 px-3 py-2.5 text-sm" />
               <button disabled={saving} className="md:col-span-2 inline-flex items-center justify-center gap-2 rounded-xl bg-brand py-2.5 text-sm font-medium text-primary-foreground shadow-glow disabled:opacity-60">
@@ -543,11 +536,16 @@ function PetsTab({ pets, avatarUrls }: { pets: Pet[]; avatarUrls: Record<string,
 }
 
 /* -------- History Tab -------- */
-function HistoryTab({ pets, avatarUrls }: { pets: Pet[]; avatarUrls: Record<string, string> }) {
+function HistoryTab({ pets, avatarUrls, activePet, onChangeActive }: { pets: Pet[]; avatarUrls: Record<string, string>; activePet: Pet | null; onChangeActive: (id: string) => void }) {
+  const [filterPetId, setFilterPetId] = useState<string | "all">(activePet?.id ?? "all");
+  useEffect(() => { if (activePet && filterPetId === "all") setFilterPetId(activePet.id); }, [activePet?.id]);
+
   const { data: items, isLoading } = useQuery({
-    queryKey: ["translations"],
+    queryKey: ["translations", filterPetId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("translations").select("*").order("created_at", { ascending: false }).limit(50);
+      let q = supabase.from("translations").select("*").order("created_at", { ascending: false }).limit(50);
+      if (filterPetId !== "all") q = q.eq("pet_id", filterPetId);
+      const { data, error } = await q;
       if (error) throw error;
       return (data ?? []) as Translation[];
     },
@@ -557,12 +555,32 @@ function HistoryTab({ pets, avatarUrls }: { pets: Pet[]; avatarUrls: Record<stri
 
   return (
     <div>
-      <h2 className="mb-6 text-2xl font-bold tracking-tight">Historial</h2>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-2xl font-bold tracking-tight">Historial</h2>
+        {pets.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            <button onClick={() => setFilterPetId("all")} className={`rounded-full px-3 py-1.5 text-xs transition ${filterPetId === "all" ? "bg-brand text-primary-foreground shadow-glow" : "bg-card/60 text-muted-foreground hover:text-foreground"}`}>Todas</button>
+            {pets.map((p) => {
+              const u = p.avatar_url ? avatarUrls[p.avatar_url] : undefined;
+              const active = filterPetId === p.id;
+              return (
+                <button key={p.id} onClick={() => { setFilterPetId(p.id); onChangeActive(p.id); }} className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs transition ${active ? "bg-brand text-primary-foreground shadow-glow" : "bg-card/60 text-muted-foreground hover:text-foreground"}`}>
+                  <PetAvatar pet={p} url={u} size={20} />
+                  {p.name}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+      {!isLoading && items && items.length > 0 && (
+        <p className="mb-3 text-xs text-muted-foreground">{items.length} traducción{items.length === 1 ? "" : "es"} {filterPetId !== "all" ? "para esta mascota" : "en total"}</p>
+      )}
       {isLoading && <div className="text-muted-foreground"><Loader2 className="inline h-4 w-4 animate-spin" /> Cargando...</div>}
       {!isLoading && (!items || items.length === 0) && (
         <div className="glass rounded-3xl p-12 text-center text-muted-foreground">
           <HistoryIcon className="mx-auto h-10 w-10 text-primary" />
-          <p className="mt-3">Tus traducciones aparecerán aquí.</p>
+          <p className="mt-3">Aún no hay traducciones guardadas.</p>
         </div>
       )}
       <div className="space-y-3">
@@ -702,6 +720,113 @@ function ChatTab({ activePet, avatarUrls }: { activePet: Pet | null; avatarUrls:
           {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
         </button>
       </form>
+    </div>
+  );
+}
+
+/* -------- Species Picker (big visual cards) -------- */
+function SpeciesPicker({ value, onChange }: { value: "dog" | "cat"; onChange: (s: "dog" | "cat") => void }) {
+  const options: { id: "dog" | "cat"; label: string; img: string; gradient: string }[] = [
+    { id: "dog", label: "Perro", img: dogCard, gradient: "from-amber-500/30 via-orange-500/20 to-rose-500/30" },
+    { id: "cat", label: "Gato", img: catCard, gradient: "from-violet-500/30 via-fuchsia-500/20 to-indigo-500/30" },
+  ];
+  return (
+    <div>
+      <div className="mb-2 text-xs font-medium uppercase tracking-widest text-muted-foreground">¿Qué tipo de mascota es?</div>
+      <div className="grid grid-cols-2 gap-3">
+        {options.map((o) => {
+          const active = value === o.id;
+          return (
+            <button
+              key={o.id}
+              type="button"
+              onClick={() => onChange(o.id)}
+              className={`group relative overflow-hidden rounded-2xl border-2 p-4 text-center transition ${
+                active ? "border-primary shadow-glow scale-[1.02]" : "border-border bg-card/40 hover:border-primary/40"
+              }`}
+            >
+              <div className={`absolute inset-0 bg-gradient-to-br ${o.gradient} opacity-${active ? "100" : "60"} transition`} />
+              <div className="relative">
+                <img src={o.img} alt={o.label} width={140} height={140} loading="lazy" className="mx-auto h-28 w-28 object-contain drop-shadow-xl transition group-hover:scale-105" />
+                <div className="mt-2 text-base font-semibold">{o.label}</div>
+              </div>
+              {active && (
+                <div className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground shadow-glow">✓</div>
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* -------- Analyzing Screen (premium multi-step) -------- */
+function AnalyzingScreen({ petName }: { petName: string }) {
+  const steps = [
+    "Capturando muestra de audio…",
+    "Filtrando ruido y calculando F0…",
+    "Detectando patrones bioacústicos…",
+    "Comparando con base etológica…",
+    "Interpretando intención y emoción…",
+    "Generando traducción final…",
+  ];
+  const [step, setStep] = useState(0);
+  const [progress, setProgress] = useState(5);
+  const [bars, setBars] = useState<number[]>(() => Array.from({ length: 36 }, () => 20 + Math.random() * 60));
+
+  useEffect(() => {
+    const t = setInterval(() => {
+      setProgress((p) => (p < 95 ? p + Math.random() * 4 : p));
+      setStep((s) => (s < steps.length - 1 && Math.random() > 0.55 ? s + 1 : s));
+      setBars(Array.from({ length: 36 }, () => 15 + Math.random() * 75));
+    }, 650);
+    return () => clearInterval(t);
+  }, []);
+
+  return (
+    <div className="relative flex flex-col items-center gap-6 py-6">
+      <div className="relative flex h-44 w-44 items-center justify-center">
+        <div className="absolute inset-0 animate-ping rounded-full bg-primary/15" />
+        <div className="absolute inset-4 animate-pulse rounded-full bg-primary/20" />
+        <div className="relative flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-primary to-accent shadow-glow">
+          <Activity className="h-10 w-10 text-primary-foreground" />
+        </div>
+      </div>
+
+      <div className="text-center">
+        <div className="text-2xl font-bold tracking-tight">Analizando</div>
+        <div className="mt-1 text-[11px] uppercase tracking-[0.25em] text-muted-foreground">
+          {petName} · PetVoice AI
+        </div>
+      </div>
+
+      <div className="flex h-10 w-full max-w-xs items-end justify-center gap-[3px]">
+        {bars.map((h, i) => (
+          <span
+            key={i}
+            className="w-1.5 rounded-full bg-gradient-to-t from-primary to-accent transition-all duration-500"
+            style={{ height: `${h}%`, opacity: 0.5 + (h / 200) }}
+          />
+        ))}
+      </div>
+
+      <div className="w-full max-w-sm">
+        <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
+          <span>Paso {step + 1} / {steps.length}</span>
+          <span className="font-semibold text-foreground">{Math.min(99, Math.round(progress))}%</span>
+        </div>
+        <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+          <div className="h-full rounded-full bg-gradient-to-r from-primary to-accent transition-all duration-500" style={{ width: `${progress}%` }} />
+        </div>
+      </div>
+
+      <div className="w-full max-w-sm rounded-2xl border border-border bg-card/60 p-4">
+        <div className="mb-1 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-primary">
+          <Brain className="h-3.5 w-3.5" /> Etología computacional
+        </div>
+        <div className="text-sm leading-snug text-foreground/90">{steps[step]}</div>
+      </div>
     </div>
   );
 }
