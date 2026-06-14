@@ -723,3 +723,110 @@ function ChatTab({ activePet, avatarUrls }: { activePet: Pet | null; avatarUrls:
     </div>
   );
 }
+
+/* -------- Species Picker (big visual cards) -------- */
+function SpeciesPicker({ value, onChange }: { value: "dog" | "cat"; onChange: (s: "dog" | "cat") => void }) {
+  const options: { id: "dog" | "cat"; label: string; img: string; gradient: string }[] = [
+    { id: "dog", label: "Perro", img: dogCard, gradient: "from-amber-500/30 via-orange-500/20 to-rose-500/30" },
+    { id: "cat", label: "Gato", img: catCard, gradient: "from-violet-500/30 via-fuchsia-500/20 to-indigo-500/30" },
+  ];
+  return (
+    <div>
+      <div className="mb-2 text-xs font-medium uppercase tracking-widest text-muted-foreground">¿Qué tipo de mascota es?</div>
+      <div className="grid grid-cols-2 gap-3">
+        {options.map((o) => {
+          const active = value === o.id;
+          return (
+            <button
+              key={o.id}
+              type="button"
+              onClick={() => onChange(o.id)}
+              className={`group relative overflow-hidden rounded-2xl border-2 p-4 text-center transition ${
+                active ? "border-primary shadow-glow scale-[1.02]" : "border-border bg-card/40 hover:border-primary/40"
+              }`}
+            >
+              <div className={`absolute inset-0 bg-gradient-to-br ${o.gradient} opacity-${active ? "100" : "60"} transition`} />
+              <div className="relative">
+                <img src={o.img} alt={o.label} width={140} height={140} loading="lazy" className="mx-auto h-28 w-28 object-contain drop-shadow-xl transition group-hover:scale-105" />
+                <div className="mt-2 text-base font-semibold">{o.label}</div>
+              </div>
+              {active && (
+                <div className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground shadow-glow">✓</div>
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* -------- Analyzing Screen (premium multi-step) -------- */
+function AnalyzingScreen({ petName }: { petName: string }) {
+  const steps = [
+    "Capturando muestra de audio…",
+    "Filtrando ruido y calculando F0…",
+    "Detectando patrones bioacústicos…",
+    "Comparando con base etológica…",
+    "Interpretando intención y emoción…",
+    "Generando traducción final…",
+  ];
+  const [step, setStep] = useState(0);
+  const [progress, setProgress] = useState(5);
+  const [bars, setBars] = useState<number[]>(() => Array.from({ length: 36 }, () => 20 + Math.random() * 60));
+
+  useEffect(() => {
+    const t = setInterval(() => {
+      setProgress((p) => (p < 95 ? p + Math.random() * 4 : p));
+      setStep((s) => (s < steps.length - 1 && Math.random() > 0.55 ? s + 1 : s));
+      setBars(Array.from({ length: 36 }, () => 15 + Math.random() * 75));
+    }, 650);
+    return () => clearInterval(t);
+  }, []);
+
+  return (
+    <div className="relative flex flex-col items-center gap-6 py-6">
+      <div className="relative flex h-44 w-44 items-center justify-center">
+        <div className="absolute inset-0 animate-ping rounded-full bg-primary/15" />
+        <div className="absolute inset-4 animate-pulse rounded-full bg-primary/20" />
+        <div className="relative flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-primary to-accent shadow-glow">
+          <Activity className="h-10 w-10 text-primary-foreground" />
+        </div>
+      </div>
+
+      <div className="text-center">
+        <div className="text-2xl font-bold tracking-tight">Analizando</div>
+        <div className="mt-1 text-[11px] uppercase tracking-[0.25em] text-muted-foreground">
+          {petName} · PetVoice AI
+        </div>
+      </div>
+
+      <div className="flex h-10 w-full max-w-xs items-end justify-center gap-[3px]">
+        {bars.map((h, i) => (
+          <span
+            key={i}
+            className="w-1.5 rounded-full bg-gradient-to-t from-primary to-accent transition-all duration-500"
+            style={{ height: `${h}%`, opacity: 0.5 + (h / 200) }}
+          />
+        ))}
+      </div>
+
+      <div className="w-full max-w-sm">
+        <div className="mb-1 flex items-center justify-between text-xs text-muted-foreground">
+          <span>Paso {step + 1} / {steps.length}</span>
+          <span className="font-semibold text-foreground">{Math.min(99, Math.round(progress))}%</span>
+        </div>
+        <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+          <div className="h-full rounded-full bg-gradient-to-r from-primary to-accent transition-all duration-500" style={{ width: `${progress}%` }} />
+        </div>
+      </div>
+
+      <div className="w-full max-w-sm rounded-2xl border border-border bg-card/60 p-4">
+        <div className="mb-1 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-primary">
+          <Brain className="h-3.5 w-3.5" /> Etología computacional
+        </div>
+        <div className="text-sm leading-snug text-foreground/90">{steps[step]}</div>
+      </div>
+    </div>
+  );
+}
