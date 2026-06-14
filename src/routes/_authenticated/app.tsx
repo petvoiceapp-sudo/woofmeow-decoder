@@ -6,7 +6,9 @@ import { toast } from "sonner";
 import {
   Dog, Cat, History as HistoryIcon, MessagesSquare, Mic, Plus, Trash2,
   Sparkles, Lightbulb, LogOut, Send, Loader2, PawPrint, Camera, Heart,
-  Brain, Activity, Volume2, ImagePlus,
+  Brain, Activity, Volume2, ImagePlus, Settings as SettingsIcon, LineChart,
+  Smile, Frown, ShieldAlert, Moon, Utensils, Eye, Zap, HelpCircle, Flame,
+  HeartHandshake, Wind, Sun, Bone, Footprints, Save,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { translateSound, type TranslationResult } from "@/lib/translate.functions";
