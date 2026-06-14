@@ -9,6 +9,8 @@ const TranslateInput = z.object({
   petId: z.string().nullable().optional(),
   petName: z.string().optional(),
   durationMs: z.number().optional(),
+  posture: z.string().optional(),
+  context: z.string().optional(),
 });
 
 export type TranslationResult = {
@@ -28,6 +30,13 @@ export const translateSound = createServerFn({ method: "POST" })
     if (!key) throw new Error("Missing LOVABLE_API_KEY");
 
     const speciesEs = data.species === "dog" ? "perro" : "gato";
+    const ctxBits: string[] = [];
+    if (data.posture) ctxBits.push(`postura corporal observada: ${data.posture}`);
+    if (data.context) ctxBits.push(`situación: ${data.context}`);
+    const ctxLine = ctxBits.length
+      ? `\nContexto extra reportado por el dueño: ${ctxBits.join("; ")}. Úsalo para refinar la interpretación.`
+      : "";
+
     const system = `Eres un etólogo profesional con base científica (Coren, Bradshaw, Yin, Mills). Analiza el sonido de un ${speciesEs}${data.petName ? ` llamado ${data.petName}` : ""} y devuelve UNICAMENTE un JSON válido sin texto extra con esta forma exacta:
 {
   "translation": "frase corta en español en primera persona como si la mascota hablara, máximo 2 oraciones, cálida y natural",
@@ -36,7 +45,7 @@ export const translateSound = createServerFn({ method: "POST" })
   "confidence": número entero 0-100 según la claridad acústica,
   "scientific_basis": "1-2 oraciones citando frecuencia, duración, patrón vocal o etología que respaldan la interpretación",
   "tips": ["3 consejos prácticos y accionables para el dueño en español"]
-}`;
+}${ctxLine}`;
 
     const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

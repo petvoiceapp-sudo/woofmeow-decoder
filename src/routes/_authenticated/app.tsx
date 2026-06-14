@@ -6,7 +6,9 @@ import { toast } from "sonner";
 import {
   Dog, Cat, History as HistoryIcon, MessagesSquare, Mic, Plus, Trash2,
   Sparkles, Lightbulb, LogOut, Send, Loader2, PawPrint, Camera, Heart,
-  Brain, Activity, Volume2, ImagePlus,
+  Brain, Activity, Volume2, ImagePlus, Settings as SettingsIcon, LineChart,
+  Smile, Frown, ShieldAlert, Moon, Utensils, Eye, Zap, HelpCircle, Flame,
+  HeartHandshake, Wind, Sun, Bone, Footprints, Save,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { translateSound, type TranslationResult } from "@/lib/translate.functions";
@@ -44,7 +46,7 @@ type Translation = {
 
 type Message = { id: string; role: "user" | "pet"; content: string; created_at: string };
 
-type Tab = "translate" | "pets" | "history" | "chat";
+type Tab = "translate" | "pets" | "history" | "chat" | "diary" | "settings";
 
 /* ---------- Helpers: signed avatar URLs ---------- */
 function useAvatarUrls(pets: Pet[]): Record<string, string> {
@@ -79,33 +81,45 @@ function PetAvatar({ pet, url, size = 44, ring = false }: { pet: Pet | null; url
   );
 }
 
-/* ---------- Mood / Intent visual mapping (premium icons) ---------- */
-function moodVisual(mood: string | null | undefined) {
+/* ---------- Mood / Intent visual mapping (premium Lucide icons) ---------- */
+type LucideType = typeof Smile;
+function moodVisual(mood: string | null | undefined): { Icon: LucideType; color: string; label: string } {
   const m = (mood ?? "").toLowerCase();
-  if (/(felic|alegr|content|jugue|excit)/.test(m)) return { emoji: "😄", color: "from-amber-400 to-orange-500" };
-  if (/(triste|melanc|solo)/.test(m)) return { emoji: "🥺", color: "from-sky-400 to-indigo-500" };
-  if (/(enoj|molest|frust|agresi|enfad)/.test(m)) return { emoji: "😤", color: "from-rose-500 to-red-600" };
-  if (/(miedo|asust|ansios|nervi|estres)/.test(m)) return { emoji: "😨", color: "from-violet-400 to-purple-600" };
-  if (/(relaj|calm|tranq|som)/.test(m)) return { emoji: "😌", color: "from-emerald-400 to-teal-500" };
-  if (/(curi|alert|atent)/.test(m)) return { emoji: "🧐", color: "from-cyan-400 to-blue-500" };
-  if (/(hambr|comida|sed)/.test(m)) return { emoji: "🍖", color: "from-amber-500 to-rose-500" };
-  if (/(cariñ|amor|afect)/.test(m)) return { emoji: "🥰", color: "from-pink-400 to-rose-500" };
-  return { emoji: "🐾", color: "from-primary to-accent" };
+  if (/(felic|alegr|content|jugue|excit)/.test(m)) return { Icon: Smile, color: "from-amber-400 to-orange-500", label: "feliz" };
+  if (/(triste|melanc|solo)/.test(m)) return { Icon: Frown, color: "from-sky-400 to-indigo-500", label: "triste" };
+  if (/(enoj|molest|frust|agresi|enfad)/.test(m)) return { Icon: Flame, color: "from-rose-500 to-red-600", label: "enojado" };
+  if (/(miedo|asust|ansios|nervi|estres)/.test(m)) return { Icon: ShieldAlert, color: "from-violet-400 to-purple-600", label: "asustado" };
+  if (/(relaj|calm|tranq|som)/.test(m)) return { Icon: Sun, color: "from-emerald-400 to-teal-500", label: "relajado" };
+  if (/(curi|alert|atent)/.test(m)) return { Icon: Eye, color: "from-cyan-400 to-blue-500", label: "alerta" };
+  if (/(hambr|comida|sed)/.test(m)) return { Icon: Utensils, color: "from-amber-500 to-rose-500", label: "hambriento" };
+  if (/(cariñ|amor|afect)/.test(m)) return { Icon: HeartHandshake, color: "from-pink-400 to-rose-500", label: "cariñoso" };
+  if (/(energ|hiper)/.test(m)) return { Icon: Zap, color: "from-yellow-400 to-amber-500", label: "enérgico" };
+  return { Icon: PawPrint, color: "from-primary to-accent", label: mood ?? "indefinido" };
 }
 
-function intentEmoji(intent: string | null | undefined) {
+function intentIcon(intent: string | null | undefined): LucideType {
   const i = (intent ?? "").toLowerCase();
-  if (/(juga|jueg)/.test(i)) return "🎾";
-  if (/(comer|comid|hambr)/.test(i)) return "🍖";
-  if (/(salir|paseo|caminar)/.test(i)) return "🚶";
-  if (/(atenc|mira|cari)/.test(i)) return "💖";
-  if (/(alerta|aviso|vigil|defen|protec)/.test(i)) return "🛡️";
-  if (/(miedo|huir|escond)/.test(i)) return "🙈";
-  if (/(saluda|hola)/.test(i)) return "👋";
-  if (/(dorm|descan|sue)/.test(i)) return "😴";
-  if (/(agua|sed|beber)/.test(i)) return "💧";
-  return "🎯";
+  if (/(juga|jueg)/.test(i)) return Bone;
+  if (/(comer|comid|hambr)/.test(i)) return Utensils;
+  if (/(salir|paseo|caminar)/.test(i)) return Footprints;
+  if (/(atenc|mira|cari)/.test(i)) return Heart;
+  if (/(alerta|aviso|vigil|defen|protec)/.test(i)) return ShieldAlert;
+  if (/(miedo|huir|escond)/.test(i)) return Wind;
+  if (/(saluda|hola)/.test(i)) return HeartHandshake;
+  if (/(dorm|descan|sue)/.test(i)) return Moon;
+  if (/(agua|sed|beber)/.test(i)) return Wind;
+  return HelpCircle;
 }
+
+/* ---------- Postura y contexto por especie ---------- */
+const POSTURES: Record<"dog" | "cat", string[]> = {
+  dog: ["Relajado", "Alerta", "Juguetón", "Sumiso", "Agresivo", "Asustado", "Cansado"],
+  cat: ["Relajado", "Alerta", "Defensivo", "Juguetón", "Asustado", "Cazando", "Acurrucado"],
+};
+const CONTEXTS: Record<"dog" | "cat", string[]> = {
+  dog: ["Llegada a casa", "Hora de comida", "Hora del paseo", "Jugando", "A dormir", "Visitas", "Solo en casa", "Después del baño", "En el parque"],
+  cat: ["Hora de comida", "Jugando", "Caja de arena", "En la ventana", "Despertando", "Visitas", "Pidiendo caricias", "Después de cazar"],
+};
 
 function AppPage() {
   const navigate = useNavigate();
@@ -174,6 +188,8 @@ function AppPage() {
         {tab === "pets" && <PetsTab pets={pets} avatarUrls={avatarUrls} />}
         {tab === "history" && <HistoryTab pets={pets} avatarUrls={avatarUrls} activePet={activePet} onChangeActive={setActivePetId} />}
         {tab === "chat" && <ChatTab activePet={activePet} avatarUrls={avatarUrls} />}
+        {tab === "diary" && <DiaryTab pets={pets} avatarUrls={avatarUrls} activePet={activePet} onChangeActive={setActivePetId} />}
+        {tab === "settings" && <SettingsTab onSignOut={signOut} />}
       </main>
     </div>
   );
@@ -183,7 +199,9 @@ const TABS: { id: Tab; label: string; icon: typeof Mic }[] = [
   { id: "translate", label: "Traducir", icon: Mic },
   { id: "pets", label: "Mascotas", icon: PawPrint },
   { id: "history", label: "Historial", icon: HistoryIcon },
+  { id: "diary", label: "Diario", icon: LineChart },
   { id: "chat", label: "Conversación", icon: MessagesSquare },
+  { id: "settings", label: "Ajustes", icon: SettingsIcon },
 ];
 
 /* -------- Pet switcher -------- */
@@ -216,8 +234,11 @@ function TranslateTab({ activePet, pets, avatarUrls }: { activePet: Pet | null; 
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<TranslationResult | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [posture, setPosture] = useState<string>("");
+  const [context, setContext] = useState<string>("");
 
   useEffect(() => { if (activePet) setSpecies(activePet.species); }, [activePet]);
+  useEffect(() => { setPosture(""); setContext(""); }, [species]);
 
   async function onRecorded({ base64, format, durationMs, blobUrl }: { base64: string; format: string; durationMs: number; blobUrl: string }) {
     setAudioUrl(blobUrl);
@@ -232,6 +253,8 @@ function TranslateTab({ activePet, pets, avatarUrls }: { activePet: Pet | null; 
           petId: activePet?.id ?? null,
           petName: activePet?.name,
           durationMs,
+          posture: posture || undefined,
+          context: context || undefined,
         },
       });
       setResult(res.result);
@@ -248,7 +271,7 @@ function TranslateTab({ activePet, pets, avatarUrls }: { activePet: Pet | null; 
 
   return (
     <div className="grid gap-6 md:grid-cols-[1fr_1.2fr]">
-      <div className="glass rounded-3xl p-8 shadow-card">
+      <div className="glass-card rounded-3xl p-8">
         <div className="mb-6 flex items-center justify-between">
           <h2 className="flex items-center gap-2 text-lg font-semibold">
             <Volume2 className="h-4 w-4 text-primary" /> Grabar sonido
@@ -279,19 +302,35 @@ function TranslateTab({ activePet, pets, avatarUrls }: { activePet: Pet | null; 
           </div>
         )}
 
+        <ChipPicker
+          label="Postura actual"
+          icon={<PawPrint className="h-3.5 w-3.5" />}
+          value={posture}
+          onChange={setPosture}
+          options={POSTURES[species]}
+        />
+        <div className="h-3" />
+        <ChipPicker
+          label="Contexto / situación"
+          icon={<Sparkles className="h-3.5 w-3.5" />}
+          value={context}
+          onChange={setContext}
+          options={CONTEXTS[species]}
+        />
+
         <div className="flex flex-col items-center gap-6 py-6">
           <Recorder onRecorded={onRecorded} disabled={loading} />
           {audioUrl && <audio src={audioUrl} controls className="w-full" />}
         </div>
 
         {pets.length === 0 && (
-          <p className="mt-4 rounded-xl bg-muted/40 p-3 text-center text-xs text-muted-foreground">
+          <p className="mt-2 rounded-xl bg-muted/40 p-3 text-center text-xs text-muted-foreground">
             💡 Agrega una mascota para guardar traducciones asociadas a ella.
           </p>
         )}
       </div>
 
-      <div className="glass rounded-3xl p-8 shadow-card">
+      <div className="glass-card rounded-3xl p-8">
         <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold">
           <Sparkles className="h-4 w-4 text-accent" /> Resultado
         </h2>
@@ -300,23 +339,54 @@ function TranslateTab({ activePet, pets, avatarUrls }: { activePet: Pet | null; 
 
         {!loading && !result && (
           <div className="flex flex-col items-center justify-center gap-3 py-16 text-center text-muted-foreground">
-            <div className="text-5xl">🐾</div>
-            <p className="max-w-xs text-sm">Graba un sonido para descubrir qué intenta decirte tu mascota.</p>
+            <PawPrint className="h-12 w-12 text-primary/60" />
+            <p className="max-w-xs text-sm">Selecciona postura y contexto (opcional), graba un sonido y descubre qué intenta decirte tu mascota.</p>
           </div>
         )}
 
-        {result && <ResultCard result={result} pet={activePet} petUrl={petUrl} />}
+        {result && <ResultCard result={result} pet={activePet} petUrl={petUrl} posture={posture} context={context} />}
       </div>
     </div>
   );
 }
 
-function ResultCard({ result, pet, petUrl }: { result: TranslationResult; pet: Pet | null; petUrl?: string }) {
+/* -------- ChipPicker (postura / contexto) -------- */
+function ChipPicker({ label, icon, value, onChange, options }: { label: string; icon: React.ReactNode; value: string; onChange: (v: string) => void; options: string[] }) {
+  return (
+    <div>
+      <div className="mb-2 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-widest text-muted-foreground">
+        {icon} {label}
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        {options.map((o) => {
+          const active = value === o;
+          return (
+            <button
+              key={o}
+              type="button"
+              onClick={() => onChange(active ? "" : o)}
+              className={`rounded-full px-3 py-1.5 text-xs transition ${
+                active
+                  ? "bg-brand text-primary-foreground shadow-glow ring-1 ring-primary/40"
+                  : "bg-card/60 text-muted-foreground hover:text-foreground hover:bg-card"
+              }`}
+            >
+              {o}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function ResultCard({ result, pet, petUrl, posture, context }: { result: TranslationResult; pet: Pet | null; petUrl?: string; posture?: string; context?: string }) {
   const m = moodVisual(result.mood);
+  const IIcon = intentIcon(result.intent);
   return (
     <div className="space-y-5">
       <div className={`relative overflow-hidden rounded-3xl bg-gradient-to-br ${m.color} p-6 text-white shadow-glow`}>
-        <div className="absolute -right-6 -top-6 text-[140px] leading-none opacity-20 select-none">{m.emoji}</div>
+        <m.Icon className="absolute -right-6 -top-6 h-44 w-44 text-white/15" strokeWidth={1.4} />
         <div className="relative flex items-start gap-4">
           {pet && <PetAvatar pet={pet} url={petUrl} size={56} ring />}
           <div className="flex-1">
@@ -329,12 +399,12 @@ function ResultCard({ result, pet, petUrl }: { result: TranslationResult; pet: P
         <div className="relative mt-5 flex flex-wrap gap-2 text-xs">
           {result.mood && (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-black/25 px-3 py-1.5 backdrop-blur">
-              <span>{m.emoji}</span> {result.mood}
+              <m.Icon className="h-3.5 w-3.5" /> {result.mood}
             </span>
           )}
           {result.intent && (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-black/25 px-3 py-1.5 backdrop-blur">
-              <span>{intentEmoji(result.intent)}</span> {result.intent}
+              <IIcon className="h-3.5 w-3.5" /> {result.intent}
             </span>
           )}
           {typeof result.confidence === "number" && (
@@ -345,8 +415,23 @@ function ResultCard({ result, pet, petUrl }: { result: TranslationResult; pet: P
         </div>
       </div>
 
+      {(posture || context) && (
+        <div className="flex flex-wrap gap-2 text-xs">
+          {posture && (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card/60 px-3 py-1.5 text-muted-foreground">
+              <PawPrint className="h-3.5 w-3.5 text-primary" /> Postura: <strong className="text-foreground">{posture}</strong>
+            </span>
+          )}
+          {context && (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card/60 px-3 py-1.5 text-muted-foreground">
+              <Sparkles className="h-3.5 w-3.5 text-accent" /> Contexto: <strong className="text-foreground">{context}</strong>
+            </span>
+          )}
+        </div>
+      )}
+
       {result.scientific_basis && (
-        <div className="rounded-2xl border border-border bg-card/60 p-5">
+        <div className="glass-card rounded-2xl p-5">
           <div className="mb-2 flex items-center gap-2 text-sm font-medium">
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/15 text-primary">
               <Brain className="h-4 w-4" />
@@ -358,7 +443,7 @@ function ResultCard({ result, pet, petUrl }: { result: TranslationResult; pet: P
       )}
 
       {result.tips && result.tips.length > 0 && (
-        <div className="rounded-2xl border border-border bg-card/60 p-5">
+        <div className="glass-card rounded-2xl p-5">
           <div className="mb-3 flex items-center gap-2 text-sm font-medium">
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/15 text-accent">
               <Lightbulb className="h-4 w-4" />
@@ -586,27 +671,28 @@ function HistoryTab({ pets, avatarUrls, activePet, onChangeActive }: { pets: Pet
       <div className="space-y-3">
         {items?.map((t) => {
           const m = moodVisual(t.mood);
+          const IIcon = intentIcon(t.intent);
           const pet = t.pet_id ? petById[t.pet_id] : null;
           const url = pet?.avatar_url ? avatarUrls[pet.avatar_url] : undefined;
           return (
-            <div key={t.id} className="glass rounded-2xl p-5 shadow-card transition hover:shadow-glow">
+            <div key={t.id} className="glass-card rounded-2xl p-5">
               <div className="mb-3 flex items-center justify-between text-xs text-muted-foreground">
                 <span className="flex items-center gap-2">
-                  {pet ? <PetAvatar pet={pet} url={url} size={28} /> : <span className="text-lg">{t.species === "dog" ? "🐶" : "🐱"}</span>}
+                  {pet ? <PetAvatar pet={pet} url={url} size={28} /> : (t.species === "dog" ? <Dog className="h-5 w-5 text-primary" /> : <Cat className="h-5 w-5 text-primary" />)}
                   <span className="font-medium text-foreground">{pet?.name ?? "Sin asignar"}</span>
                 </span>
                 <span>{new Date(t.created_at).toLocaleString("es")}</span>
               </div>
               <div className="flex items-start gap-3">
-                <div className={`flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-gradient-to-br ${m.color} text-lg shadow-glow`}>
-                  {m.emoji}
+                <div className={`flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-gradient-to-br ${m.color} text-white shadow-glow`}>
+                  <m.Icon className="h-5 w-5" />
                 </div>
                 <p className="text-base font-medium leading-snug">"{t.translation}"</p>
               </div>
               <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground">
-                {t.mood && <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1">{m.emoji} {t.mood}</span>}
-                {t.intent && <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1">{intentEmoji(t.intent)} {t.intent}</span>}
-                {typeof t.confidence === "number" && <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1"><Activity className="h-3 w-3" /> {t.confidence}%</span>}
+                {t.mood && <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1"><m.Icon className="h-3.5 w-3.5" /> {t.mood}</span>}
+                {t.intent && <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1"><IIcon className="h-3.5 w-3.5" /> {t.intent}</span>}
+                {typeof t.confidence === "number" && <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1"><Activity className="h-3 w-3" /> {t.confidence}%</span>}
               </div>
               {t.scientific_basis && (
                 <p className="mt-3 flex items-start gap-2 text-xs text-muted-foreground">
@@ -826,6 +912,262 @@ function AnalyzingScreen({ petName }: { petName: string }) {
           <Brain className="h-3.5 w-3.5" /> Etología computacional
         </div>
         <div className="text-sm leading-snug text-foreground/90">{steps[step]}</div>
+      </div>
+    </div>
+  );
+}
+
+/* -------- Diary Tab (mood diary) -------- */
+function DiaryTab({ pets, avatarUrls, activePet, onChangeActive }: { pets: Pet[]; avatarUrls: Record<string, string>; activePet: Pet | null; onChangeActive: (id: string) => void }) {
+  const [filterPetId, setFilterPetId] = useState<string | "all">(activePet?.id ?? "all");
+  const [range, setRange] = useState<7 | 30 | 90>(30);
+  useEffect(() => { if (activePet && filterPetId === "all") setFilterPetId(activePet.id); }, [activePet?.id]);
+
+  const since = useMemo(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - range);
+    return d.toISOString();
+  }, [range]);
+
+  const { data: items, isLoading } = useQuery({
+    queryKey: ["diary", filterPetId, range],
+    queryFn: async () => {
+      let q = supabase.from("translations").select("*").gte("created_at", since).order("created_at", { ascending: false }).limit(500);
+      if (filterPetId !== "all") q = q.eq("pet_id", filterPetId);
+      const { data, error } = await q;
+      if (error) throw error;
+      return (data ?? []) as Translation[];
+    },
+  });
+
+  const stats = useMemo(() => {
+    const counts: Record<string, number> = {};
+    const byDay: Record<string, { date: string; moods: Record<string, number> }> = {};
+    let total = 0;
+    let confidenceSum = 0;
+    let confidenceCount = 0;
+    (items ?? []).forEach((t) => {
+      const key = moodVisual(t.mood).label;
+      counts[key] = (counts[key] ?? 0) + 1;
+      total++;
+      if (typeof t.confidence === "number") { confidenceSum += t.confidence; confidenceCount++; }
+      const day = new Date(t.created_at).toISOString().slice(0, 10);
+      if (!byDay[day]) byDay[day] = { date: day, moods: {} };
+      byDay[day].moods[key] = (byDay[day].moods[key] ?? 0) + 1;
+    });
+    const dominant = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+    const daysSorted = Object.values(byDay).sort((a, b) => a.date.localeCompare(b.date));
+    return { counts, total, dominant, daysSorted, avgConfidence: confidenceCount ? Math.round(confidenceSum / confidenceCount) : null };
+  }, [items]);
+
+  const dominantVisual = stats.dominant ? moodVisual(stats.dominant) : null;
+
+  return (
+    <div>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Diario del ánimo</h2>
+          <p className="text-xs text-muted-foreground">Evolución emocional de tu mascota basada en sus traducciones.</p>
+        </div>
+        <div className="flex gap-1.5">
+          {([7, 30, 90] as const).map((r) => (
+            <button key={r} onClick={() => setRange(r)} className={`rounded-full px-3 py-1.5 text-xs transition ${range === r ? "bg-brand text-primary-foreground shadow-glow" : "bg-card/60 text-muted-foreground hover:text-foreground"}`}>
+              {r} días
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {pets.length > 0 && (
+        <div className="mb-5 flex flex-wrap gap-1.5">
+          <button onClick={() => setFilterPetId("all")} className={`rounded-full px-3 py-1.5 text-xs transition ${filterPetId === "all" ? "bg-brand text-primary-foreground shadow-glow" : "bg-card/60 text-muted-foreground hover:text-foreground"}`}>Todas</button>
+          {pets.map((p) => {
+            const u = p.avatar_url ? avatarUrls[p.avatar_url] : undefined;
+            const active = filterPetId === p.id;
+            return (
+              <button key={p.id} onClick={() => { setFilterPetId(p.id); onChangeActive(p.id); }} className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs transition ${active ? "bg-brand text-primary-foreground shadow-glow" : "bg-card/60 text-muted-foreground hover:text-foreground"}`}>
+                <PetAvatar pet={p} url={u} size={20} />
+                {p.name}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {isLoading && <div className="text-muted-foreground"><Loader2 className="inline h-4 w-4 animate-spin" /> Cargando diario...</div>}
+
+      {!isLoading && stats.total === 0 && (
+        <div className="glass-card rounded-3xl p-12 text-center text-muted-foreground">
+          <LineChart className="mx-auto h-10 w-10 text-primary" />
+          <p className="mt-3">Aún no hay datos en el periodo seleccionado.</p>
+        </div>
+      )}
+
+      {!isLoading && stats.total > 0 && (
+        <>
+          <div className="mb-5 grid gap-4 md:grid-cols-3">
+            <div className="glass-card rounded-2xl p-5">
+              <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Registros</div>
+              <div className="mt-2 text-3xl font-bold">{stats.total}</div>
+              <div className="mt-1 text-xs text-muted-foreground">en los últimos {range} días</div>
+            </div>
+            {dominantVisual && (
+              <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${dominantVisual.color} p-5 text-white shadow-glow`}>
+                <dominantVisual.Icon className="absolute -right-3 -top-3 h-24 w-24 text-white/20" strokeWidth={1.4} />
+                <div className="relative text-[10px] uppercase tracking-widest opacity-80">Ánimo dominante</div>
+                <div className="relative mt-2 text-2xl font-bold capitalize">{stats.dominant}</div>
+                <div className="relative mt-1 text-xs opacity-90">{stats.counts[stats.dominant!]} de {stats.total} registros</div>
+              </div>
+            )}
+            {stats.avgConfidence !== null && (
+              <div className="glass-card rounded-2xl p-5">
+                <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Confianza promedio</div>
+                <div className="mt-2 text-3xl font-bold">{stats.avgConfidence}%</div>
+                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
+                  <div className="h-full rounded-full bg-gradient-to-r from-primary to-accent" style={{ width: `${stats.avgConfidence}%` }} />
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="glass-card mb-5 rounded-2xl p-5">
+            <div className="mb-4 flex items-center gap-2 text-sm font-semibold"><Heart className="h-4 w-4 text-primary" /> Distribución emocional</div>
+            <div className="space-y-3">
+              {Object.entries(stats.counts).sort((a, b) => b[1] - a[1]).map(([mood, count]) => {
+                const v = moodVisual(mood);
+                const pct = Math.round((count / stats.total) * 100);
+                return (
+                  <div key={mood}>
+                    <div className="mb-1 flex items-center justify-between text-xs">
+                      <span className="inline-flex items-center gap-1.5 capitalize text-foreground"><v.Icon className="h-3.5 w-3.5" /> {mood}</span>
+                      <span className="text-muted-foreground">{count} · {pct}%</span>
+                    </div>
+                    <div className="h-2 overflow-hidden rounded-full bg-muted">
+                      <div className={`h-full rounded-full bg-gradient-to-r ${v.color}`} style={{ width: `${pct}%` }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="glass-card rounded-2xl p-5">
+            <div className="mb-4 flex items-center gap-2 text-sm font-semibold"><LineChart className="h-4 w-4 text-accent" /> Línea de tiempo</div>
+            <div className="flex items-end gap-1 overflow-x-auto pb-2">
+              {stats.daysSorted.map((d) => {
+                const total = Object.values(d.moods).reduce((a, b) => a + b, 0);
+                const top = Object.entries(d.moods).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "indefinido";
+                const v = moodVisual(top);
+                const h = 16 + total * 14;
+                return (
+                  <div key={d.date} className="flex flex-col items-center gap-1" title={`${d.date}: ${total} registros, ${top}`}>
+                    <div className={`w-5 rounded-md bg-gradient-to-t ${v.color} shadow-glow`} style={{ height: `${Math.min(h, 120)}px` }} />
+                    <span className="text-[9px] text-muted-foreground">{d.date.slice(5)}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+/* -------- Settings Tab -------- */
+function SettingsTab({ onSignOut }: { onSignOut: () => void }) {
+  const qc = useQueryClient();
+  const { data: profile } = useQuery({
+    queryKey: ["profile"],
+    queryFn: async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return null;
+      const { data } = await supabase.from("profiles").select("*").eq("id", u.user.id).maybeSingle();
+      return { user: u.user, profile: data };
+    },
+  });
+
+  const [displayName, setDisplayName] = useState("");
+  const [saving, setSaving] = useState(false);
+  useEffect(() => { if (profile?.profile?.display_name) setDisplayName(profile.profile.display_name); }, [profile]);
+
+  async function save() {
+    if (!profile?.user) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase.from("profiles").update({ display_name: displayName }).eq("id", profile.user.id);
+      if (error) throw error;
+      toast.success("Perfil actualizado");
+      qc.invalidateQueries({ queryKey: ["profile"] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "No se pudo guardar");
+    } finally { setSaving(false); }
+  }
+
+  async function clearHistory() {
+    if (!confirm("¿Eliminar TODO tu historial de traducciones? Esta acción no se puede deshacer.")) return;
+    const { data: u } = await supabase.auth.getUser();
+    if (!u.user) return;
+    const { error } = await supabase.from("translations").delete().eq("user_id", u.user.id);
+    if (error) return toast.error(error.message);
+    toast.success("Historial eliminado");
+    qc.invalidateQueries({ queryKey: ["translations"] });
+    qc.invalidateQueries({ queryKey: ["diary"] });
+  }
+
+  async function clearChats() {
+    if (!confirm("¿Eliminar todas las conversaciones?")) return;
+    const { data: u } = await supabase.auth.getUser();
+    if (!u.user) return;
+    const { error } = await supabase.from("conversations").delete().eq("user_id", u.user.id);
+    if (error) return toast.error(error.message);
+    toast.success("Conversaciones eliminadas");
+    qc.invalidateQueries({ queryKey: ["conversations"] });
+  }
+
+  return (
+    <div className="mx-auto max-w-2xl space-y-5">
+      <div>
+        <h2 className="text-2xl font-bold tracking-tight">Ajustes</h2>
+        <p className="text-xs text-muted-foreground">Administra tu perfil y datos.</p>
+      </div>
+
+      <div className="glass-card rounded-3xl p-6">
+        <div className="mb-4 flex items-center gap-2 text-sm font-semibold"><SettingsIcon className="h-4 w-4 text-primary" /> Perfil</div>
+        <div className="space-y-3">
+          <div>
+            <label className="mb-1 block text-xs text-muted-foreground">Email</label>
+            <input value={profile?.user.email ?? ""} disabled className="w-full rounded-xl border border-border bg-muted/40 px-3 py-2.5 text-sm text-muted-foreground" />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs text-muted-foreground">Nombre para mostrar</label>
+            <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="w-full rounded-xl border border-border bg-input/40 px-3 py-2.5 text-sm outline-none focus:border-primary" />
+          </div>
+          <button onClick={save} disabled={saving} className="inline-flex items-center gap-2 rounded-full bg-brand px-5 py-2 text-sm font-medium text-primary-foreground shadow-glow disabled:opacity-60">
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Guardar
+          </button>
+        </div>
+      </div>
+
+      <div className="glass-card rounded-3xl p-6">
+        <div className="mb-4 flex items-center gap-2 text-sm font-semibold"><Trash2 className="h-4 w-4 text-destructive" /> Datos</div>
+        <div className="grid gap-2 md:grid-cols-2">
+          <button onClick={clearHistory} className="rounded-xl border border-border bg-card/60 px-4 py-3 text-left text-sm transition hover:border-destructive/60 hover:text-destructive">
+            <div className="font-medium">Borrar historial</div>
+            <div className="text-xs text-muted-foreground">Elimina todas las traducciones</div>
+          </button>
+          <button onClick={clearChats} className="rounded-xl border border-border bg-card/60 px-4 py-3 text-left text-sm transition hover:border-destructive/60 hover:text-destructive">
+            <div className="font-medium">Borrar conversaciones</div>
+            <div className="text-xs text-muted-foreground">Elimina los chats con tus mascotas</div>
+          </button>
+        </div>
+      </div>
+
+      <div className="glass-card rounded-3xl p-6">
+        <div className="mb-4 flex items-center gap-2 text-sm font-semibold"><LogOut className="h-4 w-4 text-muted-foreground" /> Sesión</div>
+        <button onClick={onSignOut} className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-5 py-2 text-sm text-muted-foreground transition hover:text-foreground">
+          <LogOut className="h-4 w-4" /> Cerrar sesión
+        </button>
       </div>
     </div>
   );
