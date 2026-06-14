@@ -671,27 +671,28 @@ function HistoryTab({ pets, avatarUrls, activePet, onChangeActive }: { pets: Pet
       <div className="space-y-3">
         {items?.map((t) => {
           const m = moodVisual(t.mood);
+          const IIcon = intentIcon(t.intent);
           const pet = t.pet_id ? petById[t.pet_id] : null;
           const url = pet?.avatar_url ? avatarUrls[pet.avatar_url] : undefined;
           return (
-            <div key={t.id} className="glass rounded-2xl p-5 shadow-card transition hover:shadow-glow">
+            <div key={t.id} className="glass-card rounded-2xl p-5">
               <div className="mb-3 flex items-center justify-between text-xs text-muted-foreground">
                 <span className="flex items-center gap-2">
-                  {pet ? <PetAvatar pet={pet} url={url} size={28} /> : <span className="text-lg">{t.species === "dog" ? "🐶" : "🐱"}</span>}
+                  {pet ? <PetAvatar pet={pet} url={url} size={28} /> : (t.species === "dog" ? <Dog className="h-5 w-5 text-primary" /> : <Cat className="h-5 w-5 text-primary" />)}
                   <span className="font-medium text-foreground">{pet?.name ?? "Sin asignar"}</span>
                 </span>
                 <span>{new Date(t.created_at).toLocaleString("es")}</span>
               </div>
               <div className="flex items-start gap-3">
-                <div className={`flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-gradient-to-br ${m.color} text-lg shadow-glow`}>
-                  {m.emoji}
+                <div className={`flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-gradient-to-br ${m.color} text-white shadow-glow`}>
+                  <m.Icon className="h-5 w-5" />
                 </div>
                 <p className="text-base font-medium leading-snug">"{t.translation}"</p>
               </div>
               <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground">
-                {t.mood && <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1">{m.emoji} {t.mood}</span>}
-                {t.intent && <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1">{intentEmoji(t.intent)} {t.intent}</span>}
-                {typeof t.confidence === "number" && <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1"><Activity className="h-3 w-3" /> {t.confidence}%</span>}
+                {t.mood && <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1"><m.Icon className="h-3.5 w-3.5" /> {t.mood}</span>}
+                {t.intent && <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1"><IIcon className="h-3.5 w-3.5" /> {t.intent}</span>}
+                {typeof t.confidence === "number" && <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1"><Activity className="h-3 w-3" /> {t.confidence}%</span>}
               </div>
               {t.scientific_basis && (
                 <p className="mt-3 flex items-start gap-2 text-xs text-muted-foreground">
