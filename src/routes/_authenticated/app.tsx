@@ -536,11 +536,16 @@ function PetsTab({ pets, avatarUrls }: { pets: Pet[]; avatarUrls: Record<string,
 }
 
 /* -------- History Tab -------- */
-function HistoryTab({ pets, avatarUrls }: { pets: Pet[]; avatarUrls: Record<string, string> }) {
+function HistoryTab({ pets, avatarUrls, activePet, onChangeActive }: { pets: Pet[]; avatarUrls: Record<string, string>; activePet: Pet | null; onChangeActive: (id: string) => void }) {
+  const [filterPetId, setFilterPetId] = useState<string | "all">(activePet?.id ?? "all");
+  useEffect(() => { if (activePet && filterPetId === "all") setFilterPetId(activePet.id); }, [activePet?.id]);
+
   const { data: items, isLoading } = useQuery({
-    queryKey: ["translations"],
+    queryKey: ["translations", filterPetId],
     queryFn: async () => {
-      const { data, error } = await supabase.from("translations").select("*").order("created_at", { ascending: false }).limit(50);
+      let q = supabase.from("translations").select("*").order("created_at", { ascending: false }).limit(50);
+      if (filterPetId !== "all") q = q.eq("pet_id", filterPetId);
+      const { data, error } = await q;
       if (error) throw error;
       return (data ?? []) as Translation[];
     },
