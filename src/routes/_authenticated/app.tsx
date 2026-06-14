@@ -555,12 +555,32 @@ function HistoryTab({ pets, avatarUrls, activePet, onChangeActive }: { pets: Pet
 
   return (
     <div>
-      <h2 className="mb-6 text-2xl font-bold tracking-tight">Historial</h2>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-2xl font-bold tracking-tight">Historial</h2>
+        {pets.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            <button onClick={() => setFilterPetId("all")} className={`rounded-full px-3 py-1.5 text-xs transition ${filterPetId === "all" ? "bg-brand text-primary-foreground shadow-glow" : "bg-card/60 text-muted-foreground hover:text-foreground"}`}>Todas</button>
+            {pets.map((p) => {
+              const u = p.avatar_url ? avatarUrls[p.avatar_url] : undefined;
+              const active = filterPetId === p.id;
+              return (
+                <button key={p.id} onClick={() => { setFilterPetId(p.id); onChangeActive(p.id); }} className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs transition ${active ? "bg-brand text-primary-foreground shadow-glow" : "bg-card/60 text-muted-foreground hover:text-foreground"}`}>
+                  <PetAvatar pet={p} url={u} size={20} />
+                  {p.name}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+      {!isLoading && items && items.length > 0 && (
+        <p className="mb-3 text-xs text-muted-foreground">{items.length} traducción{items.length === 1 ? "" : "es"} {filterPetId !== "all" ? "para esta mascota" : "en total"}</p>
+      )}
       {isLoading && <div className="text-muted-foreground"><Loader2 className="inline h-4 w-4 animate-spin" /> Cargando...</div>}
       {!isLoading && (!items || items.length === 0) && (
         <div className="glass rounded-3xl p-12 text-center text-muted-foreground">
           <HistoryIcon className="mx-auto h-10 w-10 text-primary" />
-          <p className="mt-3">Tus traducciones aparecerán aquí.</p>
+          <p className="mt-3">Aún no hay traducciones guardadas.</p>
         </div>
       )}
       <div className="space-y-3">
