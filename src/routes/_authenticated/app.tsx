@@ -172,7 +172,7 @@ function AppPage() {
       <main className="mx-auto max-w-6xl px-4 py-8">
         {tab === "translate" && <TranslateTab activePet={activePet} pets={pets} avatarUrls={avatarUrls} />}
         {tab === "pets" && <PetsTab pets={pets} avatarUrls={avatarUrls} />}
-        {tab === "history" && <HistoryTab pets={pets} avatarUrls={avatarUrls} />}
+        {tab === "history" && <HistoryTab pets={pets} avatarUrls={avatarUrls} activePet={activePet} onChangeActive={setActivePetId} />}
         {tab === "chat" && <ChatTab activePet={activePet} avatarUrls={avatarUrls} />}
       </main>
     </div>
