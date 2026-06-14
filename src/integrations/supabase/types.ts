@@ -14,7 +14,154 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      conversations: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          pet_id: string | null
+          role: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          pet_id?: string | null
+          role: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          pet_id?: string | null
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pets: {
+        Row: {
+          age_years: number | null
+          avatar_url: string | null
+          breed: string | null
+          created_at: string
+          id: string
+          name: string
+          notes: string | null
+          species: Database["public"]["Enums"]["pet_species"]
+          user_id: string
+        }
+        Insert: {
+          age_years?: number | null
+          avatar_url?: string | null
+          breed?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          notes?: string | null
+          species: Database["public"]["Enums"]["pet_species"]
+          user_id: string
+        }
+        Update: {
+          age_years?: number | null
+          avatar_url?: string | null
+          breed?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          species?: Database["public"]["Enums"]["pet_species"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      translations: {
+        Row: {
+          confidence: number | null
+          created_at: string
+          duration_ms: number | null
+          id: string
+          intent: string | null
+          mood: string | null
+          pet_id: string | null
+          scientific_basis: string | null
+          species: Database["public"]["Enums"]["pet_species"]
+          tips: string[] | null
+          translation: string
+          user_id: string
+        }
+        Insert: {
+          confidence?: number | null
+          created_at?: string
+          duration_ms?: number | null
+          id?: string
+          intent?: string | null
+          mood?: string | null
+          pet_id?: string | null
+          scientific_basis?: string | null
+          species: Database["public"]["Enums"]["pet_species"]
+          tips?: string[] | null
+          translation: string
+          user_id: string
+        }
+        Update: {
+          confidence?: number | null
+          created_at?: string
+          duration_ms?: number | null
+          id?: string
+          intent?: string | null
+          mood?: string | null
+          pet_id?: string | null
+          scientific_basis?: string | null
+          species?: Database["public"]["Enums"]["pet_species"]
+          tips?: string[] | null
+          translation?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "translations_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +170,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      pet_species: "dog" | "cat"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +297,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      pet_species: ["dog", "cat"],
+    },
   },
 } as const
