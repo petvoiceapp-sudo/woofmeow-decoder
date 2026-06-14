@@ -916,3 +916,259 @@ function AnalyzingScreen({ petName }: { petName: string }) {
     </div>
   );
 }
+
+/* -------- Diary Tab (mood diary) -------- */
+function DiaryTab({ pets, avatarUrls, activePet, onChangeActive }: { pets: Pet[]; avatarUrls: Record<string, string>; activePet: Pet | null; onChangeActive: (id: string) => void }) {
+  const [filterPetId, setFilterPetId] = useState<string | "all">(activePet?.id ?? "all");
+  const [range, setRange] = useState<7 | 30 | 90>(30);
+  useEffect(() => { if (activePet && filterPetId === "all") setFilterPetId(activePet.id); }, [activePet?.id]);
+
+  const since = useMemo(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - range);
+    return d.toISOString();
+  }, [range]);
+
+  const { data: items, isLoading } = useQuery({
+    queryKey: ["diary", filterPetId, range],
+    queryFn: async () => {
+      let q = supabase.from("translations").select("*").gte("created_at", since).order("created_at", { ascending: false }).limit(500);
+      if (filterPetId !== "all") q = q.eq("pet_id", filterPetId);
+      const { data, error } = await q;
+      if (error) throw error;
+      return (data ?? []) as Translation[];
+    },
+  });
+
+  const stats = useMemo(() => {
+    const counts: Record<string, number> = {};
+    const byDay: Record<string, { date: string; moods: Record<string, number> }> = {};
+    let total = 0;
+    let confidenceSum = 0;
+    let confidenceCount = 0;
+    (items ?? []).forEach((t) => {
+      const key = moodVisual(t.mood).label;
+      counts[key] = (counts[key] ?? 0) + 1;
+      total++;
+      if (typeof t.confidence === "number") { confidenceSum += t.confidence; confidenceCount++; }
+      const day = new Date(t.created_at).toISOString().slice(0, 10);
+      if (!byDay[day]) byDay[day] = { date: day, moods: {} };
+      byDay[day].moods[key] = (byDay[day].moods[key] ?? 0) + 1;
+    });
+    const dominant = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+    const daysSorted = Object.values(byDay).sort((a, b) => a.date.localeCompare(b.date));
+    return { counts, total, dominant, daysSorted, avgConfidence: confidenceCount ? Math.round(confidenceSum / confidenceCount) : null };
+  }, [items]);
+
+  const dominantVisual = stats.dominant ? moodVisual(stats.dominant) : null;
+
+  return (
+    <div>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Diario del ánimo</h2>
+          <p className="text-xs text-muted-foreground">Evolución emocional de tu mascota basada en sus traducciones.</p>
+        </div>
+        <div className="flex gap-1.5">
+          {([7, 30, 90] as const).map((r) => (
+            <button key={r} onClick={() => setRange(r)} className={`rounded-full px-3 py-1.5 text-xs transition ${range === r ? "bg-brand text-primary-foreground shadow-glow" : "bg-card/60 text-muted-foreground hover:text-foreground"}`}>
+              {r} días
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {pets.length > 0 && (
+        <div className="mb-5 flex flex-wrap gap-1.5">
+          <button onClick={() => setFilterPetId("all")} className={`rounded-full px-3 py-1.5 text-xs transition ${filterPetId === "all" ? "bg-brand text-primary-foreground shadow-glow" : "bg-card/60 text-muted-foreground hover:text-foreground"}`}>Todas</button>
+          {pets.map((p) => {
+            const u = p.avatar_url ? avatarUrls[p.avatar_url] : undefined;
+            const active = filterPetId === p.id;
+            return (
+              <button key={p.id} onClick={() => { setFilterPetId(p.id); onChangeActive(p.id); }} className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs transition ${active ? "bg-brand text-primary-foreground shadow-glow" : "bg-card/60 text-muted-foreground hover:text-foreground"}`}>
+                <PetAvatar pet={p} url={u} size={20} />
+                {p.name}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {isLoading && <div className="text-muted-foreground"><Loader2 className="inline h-4 w-4 animate-spin" /> Cargando diario...</div>}
+
+      {!isLoading && stats.total === 0 && (
+        <div className="glass-card rounded-3xl p-12 text-center text-muted-foreground">
+          <LineChart className="mx-auto h-10 w-10 text-primary" />
+          <p className="mt-3">Aún no hay datos en el periodo seleccionado.</p>
+        </div>
+      )}
+
+      {!isLoading && stats.total > 0 && (
+        <>
+          <div className="mb-5 grid gap-4 md:grid-cols-3">
+            <div className="glass-card rounded-2xl p-5">
+              <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Registros</div>
+              <div className="mt-2 text-3xl font-bold">{stats.total}</div>
+              <div className="mt-1 text-xs text-muted-foreground">en los últimos {range} días</div>
+            </div>
+            {dominantVisual && (
+              <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${dominantVisual.color} p-5 text-white shadow-glow`}>
+                <dominantVisual.Icon className="absolute -right-3 -top-3 h-24 w-24 text-white/20" strokeWidth={1.4} />
+                <div className="relative text-[10px] uppercase tracking-widest opacity-80">Ánimo dominante</div>
+                <div className="relative mt-2 text-2xl font-bold capitalize">{stats.dominant}</div>
+                <div className="relative mt-1 text-xs opacity-90">{stats.counts[stats.dominant!]} de {stats.total} registros</div>
+              </div>
+            )}
+            {stats.avgConfidence !== null && (
+              <div className="glass-card rounded-2xl p-5">
+                <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Confianza promedio</div>
+                <div className="mt-2 text-3xl font-bold">{stats.avgConfidence}%</div>
+                <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
+                  <div className="h-full rounded-full bg-gradient-to-r from-primary to-accent" style={{ width: `${stats.avgConfidence}%` }} />
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="glass-card mb-5 rounded-2xl p-5">
+            <div className="mb-4 flex items-center gap-2 text-sm font-semibold"><Heart className="h-4 w-4 text-primary" /> Distribución emocional</div>
+            <div className="space-y-3">
+              {Object.entries(stats.counts).sort((a, b) => b[1] - a[1]).map(([mood, count]) => {
+                const v = moodVisual(mood);
+                const pct = Math.round((count / stats.total) * 100);
+                return (
+                  <div key={mood}>
+                    <div className="mb-1 flex items-center justify-between text-xs">
+                      <span className="inline-flex items-center gap-1.5 capitalize text-foreground"><v.Icon className="h-3.5 w-3.5" /> {mood}</span>
+                      <span className="text-muted-foreground">{count} · {pct}%</span>
+                    </div>
+                    <div className="h-2 overflow-hidden rounded-full bg-muted">
+                      <div className={`h-full rounded-full bg-gradient-to-r ${v.color}`} style={{ width: `${pct}%` }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="glass-card rounded-2xl p-5">
+            <div className="mb-4 flex items-center gap-2 text-sm font-semibold"><LineChart className="h-4 w-4 text-accent" /> Línea de tiempo</div>
+            <div className="flex items-end gap-1 overflow-x-auto pb-2">
+              {stats.daysSorted.map((d) => {
+                const total = Object.values(d.moods).reduce((a, b) => a + b, 0);
+                const top = Object.entries(d.moods).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "indefinido";
+                const v = moodVisual(top);
+                const h = 16 + total * 14;
+                return (
+                  <div key={d.date} className="flex flex-col items-center gap-1" title={`${d.date}: ${total} registros, ${top}`}>
+                    <div className={`w-5 rounded-md bg-gradient-to-t ${v.color} shadow-glow`} style={{ height: `${Math.min(h, 120)}px` }} />
+                    <span className="text-[9px] text-muted-foreground">{d.date.slice(5)}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+/* -------- Settings Tab -------- */
+function SettingsTab({ onSignOut }: { onSignOut: () => void }) {
+  const qc = useQueryClient();
+  const { data: profile } = useQuery({
+    queryKey: ["profile"],
+    queryFn: async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return null;
+      const { data } = await supabase.from("profiles").select("*").eq("id", u.user.id).maybeSingle();
+      return { user: u.user, profile: data };
+    },
+  });
+
+  const [displayName, setDisplayName] = useState("");
+  const [saving, setSaving] = useState(false);
+  useEffect(() => { if (profile?.profile?.display_name) setDisplayName(profile.profile.display_name); }, [profile]);
+
+  async function save() {
+    if (!profile?.user) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase.from("profiles").update({ display_name: displayName }).eq("id", profile.user.id);
+      if (error) throw error;
+      toast.success("Perfil actualizado");
+      qc.invalidateQueries({ queryKey: ["profile"] });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "No se pudo guardar");
+    } finally { setSaving(false); }
+  }
+
+  async function clearHistory() {
+    if (!confirm("¿Eliminar TODO tu historial de traducciones? Esta acción no se puede deshacer.")) return;
+    const { data: u } = await supabase.auth.getUser();
+    if (!u.user) return;
+    const { error } = await supabase.from("translations").delete().eq("user_id", u.user.id);
+    if (error) return toast.error(error.message);
+    toast.success("Historial eliminado");
+    qc.invalidateQueries({ queryKey: ["translations"] });
+    qc.invalidateQueries({ queryKey: ["diary"] });
+  }
+
+  async function clearChats() {
+    if (!confirm("¿Eliminar todas las conversaciones?")) return;
+    const { data: u } = await supabase.auth.getUser();
+    if (!u.user) return;
+    const { error } = await supabase.from("conversations").delete().eq("user_id", u.user.id);
+    if (error) return toast.error(error.message);
+    toast.success("Conversaciones eliminadas");
+    qc.invalidateQueries({ queryKey: ["conversations"] });
+  }
+
+  return (
+    <div className="mx-auto max-w-2xl space-y-5">
+      <div>
+        <h2 className="text-2xl font-bold tracking-tight">Ajustes</h2>
+        <p className="text-xs text-muted-foreground">Administra tu perfil y datos.</p>
+      </div>
+
+      <div className="glass-card rounded-3xl p-6">
+        <div className="mb-4 flex items-center gap-2 text-sm font-semibold"><SettingsIcon className="h-4 w-4 text-primary" /> Perfil</div>
+        <div className="space-y-3">
+          <div>
+            <label className="mb-1 block text-xs text-muted-foreground">Email</label>
+            <input value={profile?.user.email ?? ""} disabled className="w-full rounded-xl border border-border bg-muted/40 px-3 py-2.5 text-sm text-muted-foreground" />
+          </div>
+          <div>
+            <label className="mb-1 block text-xs text-muted-foreground">Nombre para mostrar</label>
+            <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="w-full rounded-xl border border-border bg-input/40 px-3 py-2.5 text-sm outline-none focus:border-primary" />
+          </div>
+          <button onClick={save} disabled={saving} className="inline-flex items-center gap-2 rounded-full bg-brand px-5 py-2 text-sm font-medium text-primary-foreground shadow-glow disabled:opacity-60">
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Guardar
+          </button>
+        </div>
+      </div>
+
+      <div className="glass-card rounded-3xl p-6">
+        <div className="mb-4 flex items-center gap-2 text-sm font-semibold"><Trash2 className="h-4 w-4 text-destructive" /> Datos</div>
+        <div className="grid gap-2 md:grid-cols-2">
+          <button onClick={clearHistory} className="rounded-xl border border-border bg-card/60 px-4 py-3 text-left text-sm transition hover:border-destructive/60 hover:text-destructive">
+            <div className="font-medium">Borrar historial</div>
+            <div className="text-xs text-muted-foreground">Elimina todas las traducciones</div>
+          </button>
+          <button onClick={clearChats} className="rounded-xl border border-border bg-card/60 px-4 py-3 text-left text-sm transition hover:border-destructive/60 hover:text-destructive">
+            <div className="font-medium">Borrar conversaciones</div>
+            <div className="text-xs text-muted-foreground">Elimina los chats con tus mascotas</div>
+          </button>
+        </div>
+      </div>
+
+      <div className="glass-card rounded-3xl p-6">
+        <div className="mb-4 flex items-center gap-2 text-sm font-semibold"><LogOut className="h-4 w-4 text-muted-foreground" /> Sesión</div>
+        <button onClick={onSignOut} className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-5 py-2 text-sm text-muted-foreground transition hover:text-foreground">
+          <LogOut className="h-4 w-4" /> Cerrar sesión
+        </button>
+      </div>
+    </div>
+  );
+}
