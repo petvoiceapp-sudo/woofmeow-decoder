@@ -13,6 +13,8 @@ import { translateSound, type TranslationResult } from "@/lib/translate.function
 import { chatWithPet } from "@/lib/chat.functions";
 import { Recorder } from "@/components/Recorder";
 import logo from "@/assets/logo.png";
+import dogCard from "@/assets/dog-card.png";
+import catCard from "@/assets/cat-card.png";
 
 export const Route = createFileRoute("/_authenticated/app")({
   component: AppPage,
