@@ -485,11 +485,10 @@ function PetsTab({ pets, avatarUrls }: { pets: Pet[]; avatarUrls: Record<string,
             </label>
 
             <div className="grid w-full flex-1 gap-3 md:grid-cols-2">
-              <input required value={name} onChange={(e) => setName(e.target.value)} placeholder="Nombre" className="rounded-xl border border-border bg-input/40 px-3 py-2.5 text-sm outline-none focus:border-primary" />
-              <select value={species} onChange={(e) => setSpecies(e.target.value as "dog" | "cat")} className="rounded-xl border border-border bg-input/40 px-3 py-2.5 text-sm">
-                <option value="dog">🐶 Perro</option>
-                <option value="cat">🐱 Gato</option>
-              </select>
+              <input required value={name} onChange={(e) => setName(e.target.value)} placeholder="Nombre" className="rounded-xl border border-border bg-input/40 px-3 py-2.5 text-sm outline-none focus:border-primary md:col-span-2" />
+              <div className="md:col-span-2">
+                <SpeciesPicker value={species} onChange={setSpecies} />
+              </div>
               <input value={breed} onChange={(e) => setBreed(e.target.value)} placeholder="Raza (opcional)" className="rounded-xl border border-border bg-input/40 px-3 py-2.5 text-sm outline-none focus:border-primary" />
               <input type="number" min={0} max={40} value={age} onChange={(e) => setAge(e.target.value)} placeholder="Edad (años)" className="rounded-xl border border-border bg-input/40 px-3 py-2.5 text-sm" />
               <button disabled={saving} className="md:col-span-2 inline-flex items-center justify-center gap-2 rounded-xl bg-brand py-2.5 text-sm font-medium text-primary-foreground shadow-glow disabled:opacity-60">
