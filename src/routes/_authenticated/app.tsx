@@ -46,7 +46,7 @@ type Translation = {
 
 type Message = { id: string; role: "user" | "pet"; content: string; created_at: string };
 
-type Tab = "translate" | "pets" | "history" | "chat";
+type Tab = "translate" | "pets" | "history" | "chat" | "diary" | "settings";
 
 /* ---------- Helpers: signed avatar URLs ---------- */
 function useAvatarUrls(pets: Pet[]): Record<string, string> {
