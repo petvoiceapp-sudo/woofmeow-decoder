@@ -188,6 +188,8 @@ function AppPage() {
         {tab === "pets" && <PetsTab pets={pets} avatarUrls={avatarUrls} />}
         {tab === "history" && <HistoryTab pets={pets} avatarUrls={avatarUrls} activePet={activePet} onChangeActive={setActivePetId} />}
         {tab === "chat" && <ChatTab activePet={activePet} avatarUrls={avatarUrls} />}
+        {tab === "diary" && <DiaryTab pets={pets} avatarUrls={avatarUrls} activePet={activePet} onChangeActive={setActivePetId} />}
+        {tab === "settings" && <SettingsTab onSignOut={signOut} />}
       </main>
     </div>
   );
@@ -197,7 +199,9 @@ const TABS: { id: Tab; label: string; icon: typeof Mic }[] = [
   { id: "translate", label: "Traducir", icon: Mic },
   { id: "pets", label: "Mascotas", icon: PawPrint },
   { id: "history", label: "Historial", icon: HistoryIcon },
+  { id: "diary", label: "Diario", icon: LineChart },
   { id: "chat", label: "Conversación", icon: MessagesSquare },
+  { id: "settings", label: "Ajustes", icon: SettingsIcon },
 ];
 
 /* -------- Pet switcher -------- */
