@@ -97,29 +97,26 @@ Reglas:
     try {
       const cleaned = content.replace(/^```json\s*|\s*```$/g, "").trim();
       parsed = JSON.parse(cleaned);
+      if (!Array.isArray(parsed.results)) {
+        parsed = { results: [] };
+      }
     } catch {
-      parsed = {
-        translation: content || "No pude interpretar el sonido.",
-        mood: "indefinido",
-        intent: "indefinido",
-        confidence: 0,
-        scientific_basis: "",
-        tips: [],
-      };
+      parsed = { results: [] };
     }
 
+    const top = parsed.results[0];
     const { data: saved, error } = await context.supabase
       .from("translations")
       .insert({
         user_id: context.userId,
         pet_id: data.petId ?? null,
         species: data.species,
-        mood: parsed.mood ?? null,
-        intent: parsed.intent ?? null,
-        translation: parsed.translation ?? "",
-        confidence: typeof parsed.confidence === "number" ? Math.round(parsed.confidence) : null,
-        scientific_basis: parsed.scientific_basis ?? null,
-        tips: Array.isArray(parsed.tips) ? parsed.tips : null,
+        mood: top?.mood ?? null,
+        intent: top?.intent ?? null,
+        translation: top?.translation ?? "",
+        confidence: typeof top?.confidence === "number" ? Math.round(top.confidence) : null,
+        scientific_basis: top?.scientific_basis ?? null,
+        tips: Array.isArray(top?.tips) ? top.tips : null,
         duration_ms: data.durationMs ?? null,
       })
       .select()
