@@ -113,14 +113,50 @@ function intentIcon(intent: string | null | undefined): LucideType {
   return HelpCircle;
 }
 
-/* ---------- Postura y contexto por especie ---------- */
-const POSTURES: Record<"dog" | "cat", string[]> = {
-  dog: ["Relajado", "Alerta", "Juguetón", "Sumiso", "Agresivo", "Asustado", "Cansado"],
-  cat: ["Relajado", "Alerta", "Defensivo", "Juguetón", "Asustado", "Cazando", "Acurrucado"],
+/* ---------- Postura y contexto por especie (con icono) ---------- */
+type ChipOption = { label: string; Icon: LucideType };
+const POSTURES: Record<"dog" | "cat", ChipOption[]> = {
+  dog: [
+    { label: "Relajado", Icon: Sun },
+    { label: "Alerta", Icon: Eye },
+    { label: "Juguetón", Icon: Gamepad2 },
+    { label: "Sumiso", Icon: Hand },
+    { label: "Agresivo", Icon: AlertOctagon },
+    { label: "Asustado", Icon: ShieldAlert },
+    { label: "Cansado", Icon: Moon },
+  ],
+  cat: [
+    { label: "Relajado", Icon: Sun },
+    { label: "Alerta", Icon: Eye },
+    { label: "Defensivo", Icon: ShieldAlert },
+    { label: "Juguetón", Icon: Gamepad2 },
+    { label: "Asustado", Icon: Wind },
+    { label: "Cazando", Icon: Zap },
+    { label: "Acurrucado", Icon: Heart },
+  ],
 };
-const CONTEXTS: Record<"dog" | "cat", string[]> = {
-  dog: ["Llegada a casa", "Hora de comida", "Hora del paseo", "Jugando", "A dormir", "Visitas", "Solo en casa", "Después del baño", "En el parque"],
-  cat: ["Hora de comida", "Jugando", "Caja de arena", "En la ventana", "Despertando", "Visitas", "Pidiendo caricias", "Después de cazar"],
+const CONTEXTS: Record<"dog" | "cat", ChipOption[]> = {
+  dog: [
+    { label: "Llegada a casa", Icon: Bell },
+    { label: "Hora de comida", Icon: Beef },
+    { label: "Hora del paseo", Icon: Footprints },
+    { label: "Jugando", Icon: Gamepad2 },
+    { label: "A dormir", Icon: Moon },
+    { label: "Visitas", Icon: Hand },
+    { label: "Solo en casa", Icon: Wind },
+    { label: "Después del baño", Icon: Droplets },
+    { label: "En el parque", Icon: Sun },
+  ],
+  cat: [
+    { label: "Hora de comida", Icon: Beef },
+    { label: "Jugando", Icon: Gamepad2 },
+    { label: "Caja de arena", Icon: Cookie },
+    { label: "En la ventana", Icon: Eye },
+    { label: "Despertando", Icon: Sun },
+    { label: "Visitas", Icon: Hand },
+    { label: "Pidiendo caricias", Icon: Heart },
+    { label: "Después de cazar", Icon: Zap },
+  ],
 };
 
 function AppPage() {
@@ -327,21 +363,33 @@ function TranslateTab({ activePet, pets, avatarUrls }: { activePet: Pet | null; 
           </div>
         )}
 
-        <ChipPicker
-          label="Postura actual"
-          icon={<PawPrint className="h-3.5 w-3.5" />}
-          value={posture}
-          onChange={setPosture}
-          options={POSTURES[species]}
-        />
-        <div className="h-3" />
-        <ChipPicker
-          label="Contexto / situación"
-          icon={<Sparkles className="h-3.5 w-3.5" />}
-          value={context}
-          onChange={setContext}
-          options={CONTEXTS[species]}
-        />
+        <div className="mb-4 rounded-2xl border border-border/50 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 p-4 backdrop-blur">
+          <div className="mb-3 flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/15 text-primary">
+              <Sparkles className="h-3.5 w-3.5" />
+            </div>
+            <div>
+              <div className="text-xs font-semibold">Contexto del momento</div>
+              <div className="text-[10px] text-muted-foreground">Opcional — mejora la precisión</div>
+            </div>
+          </div>
+
+          <ChipPicker
+            label="Postura"
+            icon={<PawPrint className="h-3 w-3" />}
+            value={posture}
+            onChange={setPosture}
+            options={POSTURES[species]}
+          />
+          <div className="my-3 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+          <ChipPicker
+            label="Situación"
+            icon={<Activity className="h-3 w-3" />}
+            value={context}
+            onChange={setContext}
+            options={CONTEXTS[species]}
+          />
+        </div>
 
         <div className="flex flex-col items-center gap-6 py-6">
           <Recorder onRecorded={onRecorded} disabled={loading} />
@@ -376,27 +424,28 @@ function TranslateTab({ activePet, pets, avatarUrls }: { activePet: Pet | null; 
 }
 
 /* -------- ChipPicker (postura / contexto) -------- */
-function ChipPicker({ label, icon, value, onChange, options }: { label: string; icon: React.ReactNode; value: string; onChange: (v: string) => void; options: string[] }) {
+function ChipPicker({ label, icon, value, onChange, options }: { label: string; icon: React.ReactNode; value: string; onChange: (v: string) => void; options: ChipOption[] }) {
   return (
     <div>
-      <div className="mb-2 flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-widest text-muted-foreground">
+      <div className="mb-2 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
         {icon} {label}
       </div>
       <div className="flex flex-wrap gap-1.5">
         {options.map((o) => {
-          const active = value === o;
+          const active = value === o.label;
           return (
             <button
-              key={o}
+              key={o.label}
               type="button"
-              onClick={() => onChange(active ? "" : o)}
-              className={`rounded-full px-3 py-1.5 text-xs transition ${
+              onClick={() => onChange(active ? "" : o.label)}
+              className={`group inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition ${
                 active
-                  ? "bg-brand text-primary-foreground shadow-glow ring-1 ring-primary/40"
-                  : "bg-card/60 text-muted-foreground hover:text-foreground hover:bg-card"
+                  ? "bg-brand text-primary-foreground shadow-glow ring-1 ring-primary/50 scale-[1.03]"
+                  : "border border-border/60 bg-card/50 text-muted-foreground hover:border-primary/40 hover:text-foreground hover:bg-card/80"
               }`}
             >
-              {o}
+              <o.Icon className={`h-3.5 w-3.5 ${active ? "" : "text-primary/70"}`} />
+              {o.label}
             </button>
           );
         })}
