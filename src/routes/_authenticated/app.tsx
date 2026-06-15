@@ -424,17 +424,17 @@ function ResultCard({ result, pet, petUrl, posture, context }: { result: Transla
         <div className="relative mt-5 flex flex-wrap gap-2 text-xs">
           {result.mood && (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-black/25 px-3 py-1.5 backdrop-blur">
-              <m.Icon className="h-3.5 w-3.5" /> {result.mood}
+              <m.Icon className="h-4 w-4" /> {result.mood}
             </span>
           )}
           {result.intent && (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-black/25 px-3 py-1.5 backdrop-blur">
-              <IIcon className="h-3.5 w-3.5" /> {result.intent}
+              <IIcon className="h-4 w-4" /> {result.intent}
             </span>
           )}
           {typeof result.confidence === "number" && (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-black/25 px-3 py-1.5 backdrop-blur">
-              <Activity className="h-3 w-3" /> {result.confidence}%
+              <Activity className="h-3.5 w-3.5" /> {result.confidence}%
             </span>
           )}
         </div>
