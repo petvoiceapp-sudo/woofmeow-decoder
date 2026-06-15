@@ -13,13 +13,17 @@ const TranslateInput = z.object({
   context: z.string().optional(),
 });
 
-export type TranslationResult = {
+export type SingleResult = {
   translation: string;
   mood: string;
   intent: string;
   confidence: number;
   scientific_basis: string;
   tips: string[];
+};
+
+export type TranslationResult = {
+  results: SingleResult[];
 };
 
 export const translateSound = createServerFn({ method: "POST" })
@@ -39,13 +43,24 @@ export const translateSound = createServerFn({ method: "POST" })
 
     const system = `Eres un etólogo profesional con base científica (Coren, Bradshaw, Yin, Mills). Analiza el sonido de un ${speciesEs}${data.petName ? ` llamado ${data.petName}` : ""} y devuelve UNICAMENTE un JSON válido sin texto extra con esta forma exacta:
 {
-  "translation": "frase corta en español en primera persona como si la mascota hablara, máximo 2 oraciones, cálida y natural",
-  "mood": "una sola palabra en español que describa la emoción dominante",
-  "intent": "intención principal en pocas palabras (ej: pedir comida, alerta, juego, miedo, afecto, dolor)",
-  "confidence": número entero 0-100 según la claridad acústica,
-  "scientific_basis": "1-2 oraciones citando frecuencia, duración, patrón vocal o etología que respaldan la interpretación",
-  "tips": ["3 consejos prácticos y accionables para el dueño en español"]
-}${ctxLine}`;
+  "results": [
+    {
+      "translation": "frase corta en español en primera persona como si la mascota hablara, máximo 2 oraciones, cálida y natural",
+      "mood": "una sola palabra en español que describa la emoción dominante",
+      "intent": "intención principal en pocas palabras",
+      "confidence": número entero 0-100 según la claridad acústica,
+      "scientific_basis": "1-2 oraciones citando frecuencia, duración, patrón vocal o etología que respaldan la interpretación",
+      "tips": ["3 consejos prácticos y accionables para el dueño en español"]
+    },
+    ... (mínimo 10 resultados diferentes ordenados de mayor a menor confidence)
+  ]
+}${ctxLine}
+
+Reglas:
+- Genera EXACTAMENTE 10 resultados posibles diferentes.
+- Varía los moods: hambriento, asustado, alerta, con sueño, nervioso, feliz, juguetón, enojado, cariñoso, curioso, etc.
+- El primero es el más probable (confidence más alto). El último es el menos probable.
+- Cada resultado debe ser una interpretación distinta del mismo sonido.`;
 
     const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
