@@ -455,10 +455,25 @@ function ChipPicker({ label, icon, value, onChange, options }: { label: string; 
 }
 
 function ResultCard({ result, pet, petUrl, posture, context }: { result: TranslationResult; pet: Pet | null; petUrl?: string; posture?: string; context?: string }) {
-  const m = moodVisual(result.mood);
-  const IIcon = intentIcon(result.intent);
+  const results = result.results ?? [];
+  const top = results[0];
+  const others = results.slice(1);
+
+  if (!top) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-3 py-16 text-center text-muted-foreground">
+        <PawPrint className="h-12 w-12 text-primary/60" />
+        <p className="max-w-xs text-sm">No se pudieron generar interpretaciones para este sonido.</p>
+      </div>
+    );
+  }
+
+  const m = moodVisual(top.mood);
+  const IIcon = intentIcon(top.intent);
+
   return (
     <div className="space-y-5">
+      {/* Top result — hero card */}
       <div className={`relative overflow-hidden rounded-3xl bg-gradient-to-br ${m.color} p-6 text-white shadow-glow`}>
         <m.Icon className="absolute -right-6 -top-6 h-44 w-44 text-white/15" strokeWidth={1.4} />
         <div className="relative flex items-start gap-4">
@@ -467,23 +482,23 @@ function ResultCard({ result, pet, petUrl, posture, context }: { result: Transla
             <div className="text-[11px] uppercase tracking-widest opacity-80">
               {pet ? `${pet.name} dice` : "Tu mascota dice"}
             </div>
-            <p className="mt-1 text-xl font-semibold leading-snug drop-shadow">"{result.translation}"</p>
+            <p className="mt-1 text-xl font-semibold leading-snug drop-shadow">"{top.translation}"</p>
           </div>
         </div>
         <div className="relative mt-5 flex flex-wrap gap-2 text-xs">
-          {result.mood && (
+          {top.mood && (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-black/25 px-3 py-1.5 backdrop-blur">
-              <m.Icon className="h-4 w-4" /> {result.mood}
+              <m.Icon className="h-4 w-4" /> {top.mood}
             </span>
           )}
-          {result.intent && (
+          {top.intent && (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-black/25 px-3 py-1.5 backdrop-blur">
-              <IIcon className="h-4 w-4" /> {result.intent}
+              <IIcon className="h-4 w-4" /> {top.intent}
             </span>
           )}
-          {typeof result.confidence === "number" && (
+          {typeof top.confidence === "number" && (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-black/25 px-3 py-1.5 backdrop-blur">
-              <Activity className="h-3.5 w-3.5" /> {result.confidence}%
+              <Activity className="h-3.5 w-3.5" /> {top.confidence}%
             </span>
           )}
         </div>
@@ -504,7 +519,7 @@ function ResultCard({ result, pet, petUrl, posture, context }: { result: Transla
         </div>
       )}
 
-      {result.scientific_basis && (
+      {top.scientific_basis && (
         <div className="glass-card rounded-2xl p-5">
           <div className="mb-2 flex items-center gap-2 text-sm font-medium">
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/15 text-primary">
@@ -512,11 +527,11 @@ function ResultCard({ result, pet, petUrl, posture, context }: { result: Transla
             </span>
             Base científica
           </div>
-          <p className="text-sm leading-relaxed text-muted-foreground">{result.scientific_basis}</p>
+          <p className="text-sm leading-relaxed text-muted-foreground">{top.scientific_basis}</p>
         </div>
       )}
 
-      {result.tips && result.tips.length > 0 && (
+      {top.tips && top.tips.length > 0 && (
         <div className="glass-card rounded-2xl p-5">
           <div className="mb-3 flex items-center gap-2 text-sm font-medium">
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/15 text-accent">
@@ -525,13 +540,53 @@ function ResultCard({ result, pet, petUrl, posture, context }: { result: Transla
             Consejos
           </div>
           <ul className="space-y-2.5 text-sm text-muted-foreground">
-            {result.tips.map((t, i) => (
+            {top.tips.map((t: string, i: number) => (
               <li key={i} className="flex items-start gap-2.5">
                 <span className="mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full bg-accent/20 text-[10px] font-semibold text-accent">{i + 1}</span>
                 <span className="leading-relaxed">{t}</span>
               </li>
             ))}
           </ul>
+        </div>
+      )}
+
+      {/* Other possible interpretations */}
+      {others.length > 0 && (
+        <div>
+          <div className="mb-3 flex items-center gap-2 text-sm font-medium">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/15 text-primary">
+              <Sparkles className="h-4 w-4" />
+            </span>
+            Otras interpretaciones posibles ({others.length})
+          </div>
+          <div className="space-y-2 max-h-[340px] overflow-y-auto pr-1">
+            {others.map((r, idx) => {
+              const mv = moodVisual(r.mood);
+              const ii = intentIcon(r.intent);
+              return (
+                <div key={idx} className="flex items-center gap-3 rounded-2xl border border-border/60 bg-card/40 p-3 transition hover:bg-card/70">
+                  <div className={`flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-gradient-to-br ${mv.color} text-white shadow-glow`}>
+                    <mv.Icon className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">"{r.translation}"</p>
+                    <div className="mt-1 flex flex-wrap gap-1.5 text-[11px] text-muted-foreground">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5">
+                        <mv.Icon className="h-3 w-3" /> {r.mood}
+                      </span>
+                      <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5">
+                        <ii className="h-3 w-3" /> {r.intent}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-0.5">
+                    <span className="text-sm font-bold text-primary">{r.confidence}%</span>
+                    <span className="text-[10px] text-muted-foreground">probabilidad</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>
