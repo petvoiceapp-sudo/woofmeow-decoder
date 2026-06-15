@@ -87,29 +87,29 @@ function PetAvatar({ pet, url, size = 44, ring = false }: { pet: Pet | null; url
 type LucideType = typeof Smile;
 function moodVisual(mood: string | null | undefined): { Icon: LucideType; color: string; label: string } {
   const m = (mood ?? "").toLowerCase();
-  if (/(felic|alegr|content|jugue|excit)/.test(m)) return { Icon: Smile, color: "from-amber-400 to-orange-500", label: "feliz" };
+  if (/(felic|alegr|content|jugue|excit)/.test(m)) return { Icon: PartyPopper, color: "from-amber-400 to-orange-500", label: "feliz" };
   if (/(triste|melanc|solo)/.test(m)) return { Icon: Frown, color: "from-sky-400 to-indigo-500", label: "triste" };
-  if (/(enoj|molest|frust|agresi|enfad)/.test(m)) return { Icon: Flame, color: "from-rose-500 to-red-600", label: "enojado" };
+  if (/(enoj|molest|frust|agresi|enfad)/.test(m)) return { Icon: AlertOctagon, color: "from-rose-500 to-red-600", label: "enojado" };
   if (/(miedo|asust|ansios|nervi|estres)/.test(m)) return { Icon: ShieldAlert, color: "from-violet-400 to-purple-600", label: "asustado" };
   if (/(relaj|calm|tranq|som)/.test(m)) return { Icon: Sun, color: "from-emerald-400 to-teal-500", label: "relajado" };
   if (/(curi|alert|atent)/.test(m)) return { Icon: Eye, color: "from-cyan-400 to-blue-500", label: "alerta" };
-  if (/(hambr|comida|sed)/.test(m)) return { Icon: Utensils, color: "from-amber-500 to-rose-500", label: "hambriento" };
-  if (/(cariñ|amor|afect)/.test(m)) return { Icon: HeartHandshake, color: "from-pink-400 to-rose-500", label: "cariñoso" };
+  if (/(hambr|comida|sed)/.test(m)) return { Icon: Beef, color: "from-amber-500 to-rose-500", label: "hambriento" };
+  if (/(cariñ|amor|afect)/.test(m)) return { Icon: Heart, color: "from-pink-400 to-rose-500", label: "cariñoso" };
   if (/(energ|hiper)/.test(m)) return { Icon: Zap, color: "from-yellow-400 to-amber-500", label: "enérgico" };
   return { Icon: PawPrint, color: "from-primary to-accent", label: mood ?? "indefinido" };
 }
 
 function intentIcon(intent: string | null | undefined): LucideType {
   const i = (intent ?? "").toLowerCase();
-  if (/(juga|jueg)/.test(i)) return Bone;
-  if (/(comer|comid|hambr)/.test(i)) return Utensils;
+  if (/(juga|jueg)/.test(i)) return Gamepad2;
+  if (/(comer|comid|hambr)/.test(i)) return Beef;
   if (/(salir|paseo|caminar)/.test(i)) return Footprints;
-  if (/(atenc|mira|cari)/.test(i)) return Heart;
-  if (/(alerta|aviso|vigil|defen|protec)/.test(i)) return ShieldAlert;
+  if (/(atenc|mira|cari)/.test(i)) return Hand;
+  if (/(alerta|aviso|vigil|defen|protec)/.test(i)) return Bell;
   if (/(miedo|huir|escond)/.test(i)) return Wind;
-  if (/(saluda|hola)/.test(i)) return HeartHandshake;
+  if (/(saluda|hola)/.test(i)) return MessageCircle;
   if (/(dorm|descan|sue)/.test(i)) return Moon;
-  if (/(agua|sed|beber)/.test(i)) return Wind;
+  if (/(agua|sed|beber)/.test(i)) return Droplets;
   return HelpCircle;
 }
 
@@ -169,7 +169,8 @@ function AppPage() {
             </button>
           </div>
         </div>
-        <nav className="mx-auto flex max-w-6xl gap-1 overflow-x-auto px-4 pb-3">
+        {/* Desktop nav */}
+        <nav className="hidden md:mx-auto md:flex md:max-w-6xl md:gap-1 md:overflow-x-auto md:px-4 md:pb-3">
           {TABS.map((t) => (
             <button
               key={t.id}
@@ -185,7 +186,7 @@ function AppPage() {
         </nav>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-8">
+      <main className="mx-auto max-w-6xl px-4 py-8 pb-28 md:pb-8">
         {tab === "translate" && <TranslateTab activePet={activePet} pets={pets} avatarUrls={avatarUrls} />}
         {tab === "pets" && <PetsTab pets={pets} avatarUrls={avatarUrls} />}
         {tab === "history" && <HistoryTab pets={pets} avatarUrls={avatarUrls} activePet={activePet} onChangeActive={setActivePetId} />}
@@ -193,6 +194,28 @@ function AppPage() {
         {tab === "diary" && <DiaryTab pets={pets} avatarUrls={avatarUrls} activePet={activePet} onChangeActive={setActivePetId} />}
         {tab === "settings" && <SettingsTab onSignOut={signOut} />}
       </main>
+
+      {/* Mobile bottom nav dock */}
+      <nav className="fixed bottom-4 left-4 right-4 z-40 rounded-3xl border border-border/50 bg-background/70 backdrop-blur-2xl shadow-glow md:hidden">
+        <div className="flex items-center justify-around px-1 py-1.5">
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={`flex flex-col items-center gap-0.5 rounded-2xl px-2 py-1.5 transition min-w-[3.2rem] ${
+                tab === t.id ? "text-primary" : "text-muted-foreground"
+              }`}
+            >
+              <div className={`flex h-10 w-10 items-center justify-center rounded-xl transition ${
+                tab === t.id ? "bg-brand text-primary-foreground shadow-glow" : "bg-card/60"
+              }`}>
+                <t.icon className="h-[18px] w-[18px]" />
+              </div>
+              <span className="text-[9px] font-semibold tracking-wide">{t.label}</span>
+            </button>
+          ))}
+        </div>
+      </nav>
     </div>
   );
 }
