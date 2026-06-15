@@ -9,6 +9,8 @@ import {
   Brain, Activity, Volume2, ImagePlus, Settings as SettingsIcon, LineChart,
   Smile, Frown, ShieldAlert, Moon, Utensils, Eye, Zap, HelpCircle, Flame,
   HeartHandshake, Wind, Sun, Bone, Footprints, Save,
+  Laugh, Beef, Droplets, Bell, Hand, Gamepad2, Cookie, MessageCircle,
+  AlertOctagon, PartyPopper,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { translateSound, type TranslationResult } from "@/lib/translate.functions";
