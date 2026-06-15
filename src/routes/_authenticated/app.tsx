@@ -575,7 +575,7 @@ function ResultCard({ result, pet, petUrl, posture, context }: { result: Transla
                         <mv.Icon className="h-3 w-3" /> {r.mood}
                       </span>
                       <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5">
-                        <ii className="h-3 w-3" /> {r.intent}
+                        <IIcon className="h-3 w-3" /> {r.intent}
                       </span>
                     </div>
                   </div>
