@@ -473,13 +473,14 @@ function ResultCard({ result, pet, petUrl, posture, context }: { result: Transla
 
   return (
     <div className="space-y-5">
-      {/* Top result — hero card */}
-      <div className={`relative overflow-hidden rounded-3xl bg-gradient-to-br ${m.color} p-6 text-white shadow-glow`}>
+      {/* Top result — hero card (theme colors) */}
+      <div className="relative overflow-hidden rounded-3xl border border-primary/30 bg-brand p-6 text-primary-foreground shadow-glow">
         <m.Icon className="absolute -right-6 -top-6 h-44 w-44 text-white/15" strokeWidth={1.4} />
+        <div className="absolute inset-0 bg-gradient-to-tr from-black/10 via-transparent to-white/10 pointer-events-none" />
         <div className="relative flex items-start gap-4">
           {pet && <PetAvatar pet={pet} url={petUrl} size={56} ring />}
           <div className="flex-1">
-            <div className="text-[11px] uppercase tracking-widest opacity-80">
+            <div className="text-[11px] uppercase tracking-widest opacity-90">
               {pet ? `${pet.name} dice` : "Tu mascota dice"}
             </div>
             <p className="mt-1 text-xl font-semibold leading-snug drop-shadow">"{top.translation}"</p>
