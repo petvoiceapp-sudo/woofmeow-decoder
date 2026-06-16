@@ -457,7 +457,7 @@ function ChipPicker({ label, icon, value, onChange, options }: { label: string; 
 function ResultCard({ result, pet, petUrl, posture, context }: { result: TranslationResult; pet: Pet | null; petUrl?: string; posture?: string; context?: string }) {
   const results = result.results ?? [];
   const top = results[0];
-  const others = results.slice(1);
+  
 
   if (!top) {
     return (
