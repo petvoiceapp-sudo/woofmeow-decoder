@@ -551,48 +551,12 @@ function ResultCard({ result, pet, petUrl, posture, context }: { result: Transla
         </div>
       )}
 
-      {/* Other possible interpretations */}
-      {others.length > 0 && (
-        <div>
-          <div className="mb-3 flex items-center gap-2 text-sm font-medium">
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/15 text-primary">
-              <Sparkles className="h-4 w-4" />
-            </span>
-            Otras interpretaciones posibles ({others.length})
-          </div>
-          <div className="space-y-2 max-h-[340px] overflow-y-auto pr-1">
-            {others.map((r, idx) => {
-              const mv = moodVisual(r.mood);
-              const ii = intentIcon(r.intent);
-              return (
-                <div key={idx} className="flex items-center gap-3 rounded-2xl border border-border/60 bg-card/40 p-3 transition hover:bg-card/70">
-                  <div className={`flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-gradient-to-br ${mv.color} text-white shadow-glow`}>
-                    <mv.Icon className="h-5 w-5" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">"{r.translation}"</p>
-                    <div className="mt-1 flex flex-wrap gap-1.5 text-[11px] text-muted-foreground">
-                      <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5">
-                        <mv.Icon className="h-3 w-3" /> {r.mood}
-                      </span>
-                      <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5">
-                        <IIcon className="h-3 w-3" /> {r.intent}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-end gap-0.5">
-                    <span className="text-sm font-bold text-primary">{r.confidence}%</span>
-                    <span className="text-[10px] text-muted-foreground">probabilidad</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
+
+function _unused_others_block() {
+  return null;
 
 /* -------- Pets Tab -------- */
 function PetsTab({ pets, avatarUrls }: { pets: Pet[]; avatarUrls: Record<string, string> }) {
