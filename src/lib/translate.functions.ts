@@ -41,26 +41,48 @@ export const translateSound = createServerFn({ method: "POST" })
       ? `\nContexto extra reportado por el dueño: ${ctxBits.join("; ")}. Úsalo para refinar la interpretación.`
       : "";
 
-    const system = `Eres un etólogo profesional con base científica (Coren, Bradshaw, Yin, Mills). Analiza el sonido de un ${speciesEs}${data.petName ? ` llamado ${data.petName}` : ""} y devuelve UNICAMENTE un JSON válido sin texto extra con esta forma exacta:
+    const dogMoods = [
+      "feliz", "juguetón", "alerta", "ansioso", "asustado", "agresivo defensivo",
+      "territorial", "frustrado", "aburrido", "solitario", "dolorido", "hambriento",
+      "con sueño", "cariñoso", "sumiso", "excitado", "curioso", "demandante",
+      "saludando", "advertencia",
+    ];
+    const catMoods = [
+      "contento", "ronroneo afectivo", "hambriento", "demandante", "alerta",
+      "asustado", "molesto", "agresivo defensivo", "en celo", "dolorido",
+      "frustrado", "juguetón", "curioso", "saludando", "territorial",
+      "ansioso", "buscando atención", "con sueño", "irritado", "satisfecho",
+    ];
+    const moodPool = (data.species === "dog" ? dogMoods : catMoods).join(", ");
+
+    const acousticGuide = data.species === "dog"
+      ? "Pistas acústicas: ladridos cortos y agudos (>500Hz) = alerta/juego; ladridos graves y largos (<300Hz) = advertencia/amenaza; gemidos = ansiedad/dolor/demanda; aullidos = comunicación a distancia/soledad; gruñidos = advertencia; jadeo = estrés o calor; lloriqueo agudo = sumisión/petición."
+      : "Pistas acústicas: maullido corto y agudo = saludo; maullido medio repetido = demanda (comida/atención); maullido largo y grave = queja/molestia; ronroneo grave continuo = bienestar (o auto-calma si está dolorido); bufido = miedo/defensa; gruñido = advertencia; trino/chirp = excitación cazadora; chillido = dolor agudo.";
+
+    const system = `Eres un etólogo profesional con base científica (Coren, Bradshaw, Yin, Mills). Analiza ACÚSTICAMENTE el sonido real (frecuencia fundamental en Hz, duración, ritmo, modulación, intensidad, armónicos) de un ${speciesEs}${data.petName ? ` llamado ${data.petName}` : ""} y devuelve UNICAMENTE un JSON válido sin texto extra con esta forma exacta:
 {
   "results": [
     {
       "translation": "frase corta en español en primera persona como si la mascota hablara, máximo 2 oraciones, cálida y natural",
-      "mood": "una sola palabra en español que describa la emoción dominante",
+      "mood": "una palabra o expresión corta tomada del catálogo",
       "intent": "intención principal en pocas palabras",
       "confidence": número entero 0-100 según la claridad acústica,
-      "scientific_basis": "1-2 oraciones citando frecuencia, duración, patrón vocal o etología que respaldan la interpretación",
+      "scientific_basis": "1-2 oraciones citando frecuencia (Hz), duración, patrón vocal o etología observados",
       "tips": ["3 consejos prácticos y accionables para el dueño en español"]
-    },
-    ... (mínimo 10 resultados diferentes ordenados de mayor a menor confidence)
+    }
   ]
 }${ctxLine}
 
-Reglas:
-- Genera EXACTAMENTE 10 resultados posibles diferentes.
-- Varía los moods: hambriento, asustado, alerta, con sueño, nervioso, feliz, juguetón, enojado, cariñoso, curioso, etc.
-- El primero es el más probable (confidence más alto). El último es el menos probable.
-- Cada resultado debe ser una interpretación distinta del mismo sonido.`;
+${acousticGuide}
+
+Catálogo de moods posibles para ${speciesEs}: ${moodPool}.
+
+Reglas CRÍTICAS:
+- Devuelve EXACTAMENTE 10 resultados con moods DIFERENTES entre sí, tomados del catálogo.
+- La selección de los 10 moods DEBE depender del análisis acústico real: si suena agudo y corto, prioriza alerta/juego/saludo; si es grave y prolongado, prioriza advertencia/molestia/dolor; si hay ronroneo o jadeo rítmico, prioriza bienestar/estrés; etc.
+- NO uses siempre los mismos 10: varíalos según las características acústicas detectadas en este audio concreto.
+- Ordena de mayor a menor confidence; el #1 es la interpretación más probable según la evidencia.
+- Cada scientific_basis debe mencionar al menos un parámetro acústico concreto observado.`;
 
     const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
