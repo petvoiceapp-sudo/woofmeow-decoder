@@ -457,7 +457,7 @@ function ChipPicker({ label, icon, value, onChange, options }: { label: string; 
 function ResultCard({ result, pet, petUrl, posture, context }: { result: TranslationResult; pet: Pet | null; petUrl?: string; posture?: string; context?: string }) {
   const results = result.results ?? [];
   const top = results[0];
-  const others = results.slice(1);
+  
 
   if (!top) {
     return (
@@ -473,13 +473,14 @@ function ResultCard({ result, pet, petUrl, posture, context }: { result: Transla
 
   return (
     <div className="space-y-5">
-      {/* Top result — hero card */}
-      <div className={`relative overflow-hidden rounded-3xl bg-gradient-to-br ${m.color} p-6 text-white shadow-glow`}>
+      {/* Top result — hero card (theme colors) */}
+      <div className="relative overflow-hidden rounded-3xl border border-primary/30 bg-brand p-6 text-primary-foreground shadow-glow">
         <m.Icon className="absolute -right-6 -top-6 h-44 w-44 text-white/15" strokeWidth={1.4} />
+        <div className="absolute inset-0 bg-gradient-to-tr from-black/10 via-transparent to-white/10 pointer-events-none" />
         <div className="relative flex items-start gap-4">
           {pet && <PetAvatar pet={pet} url={petUrl} size={56} ring />}
           <div className="flex-1">
-            <div className="text-[11px] uppercase tracking-widest opacity-80">
+            <div className="text-[11px] uppercase tracking-widest opacity-90">
               {pet ? `${pet.name} dice` : "Tu mascota dice"}
             </div>
             <p className="mt-1 text-xl font-semibold leading-snug drop-shadow">"{top.translation}"</p>
@@ -550,48 +551,10 @@ function ResultCard({ result, pet, petUrl, posture, context }: { result: Transla
         </div>
       )}
 
-      {/* Other possible interpretations */}
-      {others.length > 0 && (
-        <div>
-          <div className="mb-3 flex items-center gap-2 text-sm font-medium">
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/15 text-primary">
-              <Sparkles className="h-4 w-4" />
-            </span>
-            Otras interpretaciones posibles ({others.length})
-          </div>
-          <div className="space-y-2 max-h-[340px] overflow-y-auto pr-1">
-            {others.map((r, idx) => {
-              const mv = moodVisual(r.mood);
-              const ii = intentIcon(r.intent);
-              return (
-                <div key={idx} className="flex items-center gap-3 rounded-2xl border border-border/60 bg-card/40 p-3 transition hover:bg-card/70">
-                  <div className={`flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-gradient-to-br ${mv.color} text-white shadow-glow`}>
-                    <mv.Icon className="h-5 w-5" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">"{r.translation}"</p>
-                    <div className="mt-1 flex flex-wrap gap-1.5 text-[11px] text-muted-foreground">
-                      <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5">
-                        <mv.Icon className="h-3 w-3" /> {r.mood}
-                      </span>
-                      <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5">
-                        <IIcon className="h-3 w-3" /> {r.intent}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-end gap-0.5">
-                    <span className="text-sm font-bold text-primary">{r.confidence}%</span>
-                    <span className="text-[10px] text-muted-foreground">probabilidad</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
+
 
 /* -------- Pets Tab -------- */
 function PetsTab({ pets, avatarUrls }: { pets: Pet[]; avatarUrls: Record<string, string> }) {
