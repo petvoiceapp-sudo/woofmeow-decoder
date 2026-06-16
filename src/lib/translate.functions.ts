@@ -78,11 +78,10 @@ ${acousticGuide}
 Catálogo de moods posibles para ${speciesEs}: ${moodPool}.
 
 Reglas CRÍTICAS:
-- Devuelve EXACTAMENTE 10 resultados con moods DIFERENTES entre sí, tomados del catálogo.
-- La selección de los 10 moods DEBE depender del análisis acústico real: si suena agudo y corto, prioriza alerta/juego/saludo; si es grave y prolongado, prioriza advertencia/molestia/dolor; si hay ronroneo o jadeo rítmico, prioriza bienestar/estrés; etc.
-- NO uses siempre los mismos 10: varíalos según las características acústicas detectadas en este audio concreto.
-- Ordena de mayor a menor confidence; el #1 es la interpretación más probable según la evidencia.
-- Cada scientific_basis debe mencionar al menos un parámetro acústico concreto observado.`;
+- Devuelve EXACTAMENTE 1 resultado: la interpretación MÁS probable según la evidencia acústica real.
+- El mood debe tomarse del catálogo y reflejar las características acústicas observadas en este audio concreto.
+- scientific_basis debe mencionar al menos un parámetro acústico concreto observado (Hz, duración, patrón).
+- Sé breve y directo. Responde solo con el JSON.`;
 
     const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
