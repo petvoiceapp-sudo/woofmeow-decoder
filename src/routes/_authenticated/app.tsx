@@ -555,8 +555,6 @@ function ResultCard({ result, pet, petUrl, posture, context }: { result: Transla
   );
 }
 
-function _unused_others_block() {
-  return null;
 
 /* -------- Pets Tab -------- */
 function PetsTab({ pets, avatarUrls }: { pets: Pet[]; avatarUrls: Record<string, string> }) {
