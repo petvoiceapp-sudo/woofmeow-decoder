@@ -85,18 +85,24 @@ function PetAvatar({ pet, url, size = 44, ring = false }: { pet: Pet | null; url
 
 /* ---------- Mood / Intent visual mapping (premium Lucide icons) ---------- */
 type LucideType = typeof Smile;
-function moodVisual(mood: string | null | undefined): { Icon: LucideType; color: string; label: string } {
+type MoodVis = { Icon: LucideType; color: string; label: string; emoji: string };
+function moodVisual(mood: string | null | undefined): MoodVis {
   const m = (mood ?? "").toLowerCase();
-  if (/(felic|alegr|content|jugue|excit)/.test(m)) return { Icon: PartyPopper, color: "from-amber-400 to-orange-500", label: "feliz" };
-  if (/(triste|melanc|solo)/.test(m)) return { Icon: Frown, color: "from-sky-400 to-indigo-500", label: "triste" };
-  if (/(enoj|molest|frust|agresi|enfad)/.test(m)) return { Icon: AlertOctagon, color: "from-rose-500 to-red-600", label: "enojado" };
-  if (/(miedo|asust|ansios|nervi|estres)/.test(m)) return { Icon: ShieldAlert, color: "from-violet-400 to-purple-600", label: "asustado" };
-  if (/(relaj|calm|tranq|som)/.test(m)) return { Icon: Sun, color: "from-emerald-400 to-teal-500", label: "relajado" };
-  if (/(curi|alert|atent)/.test(m)) return { Icon: Eye, color: "from-cyan-400 to-blue-500", label: "alerta" };
-  if (/(hambr|comida|sed)/.test(m)) return { Icon: Beef, color: "from-amber-500 to-rose-500", label: "hambriento" };
-  if (/(cariñ|amor|afect)/.test(m)) return { Icon: Heart, color: "from-pink-400 to-rose-500", label: "cariñoso" };
-  if (/(energ|hiper)/.test(m)) return { Icon: Zap, color: "from-yellow-400 to-amber-500", label: "enérgico" };
-  return { Icon: PawPrint, color: "from-primary to-accent", label: mood ?? "indefinido" };
+  if (/(felic|alegr|content|satisf)/.test(m)) return { Icon: Laugh, color: "from-emerald-400 via-green-500 to-teal-500", label: "feliz", emoji: "😄" };
+  if (/(jugue|jueg|excit|party)/.test(m)) return { Icon: PartyPopper, color: "from-amber-400 via-orange-500 to-rose-500", label: "juguetón", emoji: "🎉" };
+  if (/(saluda|hola)/.test(m)) return { Icon: MessageCircle, color: "from-teal-400 via-cyan-500 to-sky-500", label: "saludando", emoji: "👋" };
+  if (/(triste|melanc|solitar|solo|aburri)/.test(m)) return { Icon: Frown, color: "from-sky-400 via-indigo-500 to-blue-600", label: "triste", emoji: "😔" };
+  if (/(enoj|molest|frust|agresi|enfad|irrit|territ|advert)/.test(m)) return { Icon: AlertOctagon, color: "from-rose-500 via-red-500 to-orange-600", label: "molesto", emoji: "😤" };
+  if (/(miedo|asust|ansios|nervi|estres|defens)/.test(m)) return { Icon: ShieldAlert, color: "from-violet-400 via-purple-500 to-fuchsia-600", label: "asustado", emoji: "😨" };
+  if (/(relaj|calm|tranq|ronron|bienes)/.test(m)) return { Icon: Sun, color: "from-teal-400 via-emerald-500 to-green-600", label: "relajado", emoji: "😌" };
+  if (/(curi|alert|atent|vigil)/.test(m)) return { Icon: Eye, color: "from-cyan-400 via-sky-500 to-blue-500", label: "alerta", emoji: "👀" };
+  if (/(hambr|comida|sed|demand|buscando)/.test(m)) return { Icon: Beef, color: "from-amber-500 via-orange-500 to-red-500", label: "hambriento", emoji: "🍖" };
+  if (/(cariñ|amor|afect|sumis)/.test(m)) return { Icon: Heart, color: "from-pink-400 via-rose-500 to-fuchsia-500", label: "cariñoso", emoji: "❤️" };
+  if (/(energ|hiper)/.test(m)) return { Icon: Zap, color: "from-yellow-400 via-amber-500 to-orange-500", label: "enérgico", emoji: "⚡" };
+  if (/(sueño|dorm|descan|cansad)/.test(m)) return { Icon: Moon, color: "from-indigo-400 via-violet-500 to-purple-600", label: "con sueño", emoji: "😴" };
+  if (/(dolor|herid)/.test(m)) return { Icon: Flame, color: "from-red-500 via-rose-600 to-pink-600", label: "dolorido", emoji: "🤕" };
+  if (/(celo)/.test(m)) return { Icon: HeartHandshake, color: "from-pink-500 via-rose-500 to-red-500", label: "en celo", emoji: "💕" };
+  return { Icon: PawPrint, color: "from-emerald-500 via-teal-500 to-orange-500", label: mood ?? "indefinido", emoji: "🐾" };
 }
 
 function intentIcon(intent: string | null | undefined): LucideType {
@@ -275,10 +281,10 @@ function PetSwitcher({ pets, active, avatarUrls, onChange }: { pets: Pet[]; acti
       <select
         value={active?.id ?? ""}
         onChange={(e) => onChange(e.target.value)}
-        className="cursor-pointer bg-transparent text-sm outline-none"
+        className="cursor-pointer bg-transparent text-sm font-medium text-foreground outline-none"
       >
         {pets.map((p) => (
-          <option key={p.id} value={p.id}>
+          <option key={p.id} value={p.id} className="bg-card text-foreground">
             {p.name}
           </option>
         ))}
@@ -300,6 +306,8 @@ function TranslateTab({ activePet, pets, avatarUrls }: { activePet: Pet | null; 
 
   useEffect(() => { if (activePet) setSpecies(activePet.species); }, [activePet]);
   useEffect(() => { setPosture(""); setContext(""); }, [species]);
+  // Limpiar resultado anterior si se cambia de mascota o especie
+  useEffect(() => { setResult(null); setAudioUrl(null); }, [activePet?.id, species]);
 
   async function onRecorded({ base64, format, durationMs, blobUrl }: { base64: string; format: string; durationMs: number; blobUrl: string }) {
     setAudioUrl(blobUrl);
@@ -474,13 +482,14 @@ function ResultCard({ result, pet, petUrl, posture, context }: { result: Transla
   return (
     <div className="space-y-5">
       {/* Top result — hero card (theme colors) */}
-      <div className="relative overflow-hidden rounded-3xl border border-primary/30 bg-brand p-6 text-primary-foreground shadow-glow">
+      <div className={`relative overflow-hidden rounded-3xl border border-white/20 bg-gradient-to-br ${m.color} p-6 text-white shadow-glow`}>
         <m.Icon className="absolute -right-6 -top-6 h-44 w-44 text-white/15" strokeWidth={1.4} />
-        <div className="absolute inset-0 bg-gradient-to-tr from-black/10 via-transparent to-white/10 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-tr from-black/20 via-transparent to-white/10 pointer-events-none" />
         <div className="relative flex items-start gap-4">
           {pet && <PetAvatar pet={pet} url={petUrl} size={56} ring />}
           <div className="flex-1">
-            <div className="text-[11px] uppercase tracking-widest opacity-90">
+            <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest opacity-90">
+              <span className="text-base">{m.emoji}</span>
               {pet ? `${pet.name} dice` : "Tu mascota dice"}
             </div>
             <p className="mt-1 text-xl font-semibold leading-snug drop-shadow">"{top.translation}"</p>
@@ -488,17 +497,17 @@ function ResultCard({ result, pet, petUrl, posture, context }: { result: Transla
         </div>
         <div className="relative mt-5 flex flex-wrap gap-2 text-xs">
           {top.mood && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-black/25 px-3 py-1.5 backdrop-blur">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-black/30 px-3 py-1.5 backdrop-blur">
               <m.Icon className="h-4 w-4" /> {top.mood}
             </span>
           )}
           {top.intent && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-black/25 px-3 py-1.5 backdrop-blur">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-black/30 px-3 py-1.5 backdrop-blur">
               <IIcon className="h-4 w-4" /> {top.intent}
             </span>
           )}
           {typeof top.confidence === "number" && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-black/25 px-3 py-1.5 backdrop-blur">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-black/30 px-3 py-1.5 backdrop-blur">
               <Activity className="h-3.5 w-3.5" /> {top.confidence}%
             </span>
           )}
@@ -767,28 +776,30 @@ function HistoryTab({ pets, avatarUrls, activePet, onChangeActive }: { pets: Pet
           const pet = t.pet_id ? petById[t.pet_id] : null;
           const url = pet?.avatar_url ? avatarUrls[pet.avatar_url] : undefined;
           return (
-            <div key={t.id} className="glass-card rounded-2xl p-5">
-              <div className="mb-3 flex items-center justify-between text-xs text-muted-foreground">
+            <div key={t.id} className={`relative overflow-hidden rounded-2xl border border-white/15 bg-gradient-to-br ${m.color} p-5 text-white shadow-glow`}>
+              <m.Icon className="pointer-events-none absolute -right-4 -top-4 h-32 w-32 text-white/15" strokeWidth={1.4} />
+              <div className="absolute inset-0 bg-gradient-to-tr from-black/25 via-transparent to-white/5 pointer-events-none" />
+              <div className="relative mb-3 flex items-center justify-between text-xs opacity-95">
                 <span className="flex items-center gap-2">
-                  {pet ? <PetAvatar pet={pet} url={url} size={28} /> : (t.species === "dog" ? <Dog className="h-5 w-5 text-primary" /> : <Cat className="h-5 w-5 text-primary" />)}
-                  <span className="font-medium text-foreground">{pet?.name ?? "Sin asignar"}</span>
+                  {pet ? <PetAvatar pet={pet} url={url} size={28} /> : (t.species === "dog" ? <Dog className="h-5 w-5" /> : <Cat className="h-5 w-5" />)}
+                  <span className="font-semibold">{pet?.name ?? "Sin asignar"}</span>
                 </span>
-                <span>{new Date(t.created_at).toLocaleString("es")}</span>
+                <span className="opacity-80">{new Date(t.created_at).toLocaleString("es")}</span>
               </div>
-              <div className="flex items-start gap-3">
-                <div className={`flex h-12 w-12 flex-none items-center justify-center rounded-2xl bg-gradient-to-br ${m.color} text-white shadow-glow`}>
-                  <m.Icon className="h-6 w-6" strokeWidth={2.2} />
+              <div className="relative flex items-start gap-3">
+                <div className="flex h-12 w-12 flex-none items-center justify-center rounded-2xl bg-black/30 text-2xl backdrop-blur">
+                  <span>{m.emoji}</span>
                 </div>
-                <p className="text-base font-medium leading-snug">"{t.translation}"</p>
+                <p className="text-base font-semibold leading-snug drop-shadow">"{t.translation}"</p>
               </div>
-              <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground">
-                {t.mood && <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1"><m.Icon className="h-4 w-4" /> {t.mood}</span>}
-                {t.intent && <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1"><IIcon className="h-4 w-4" /> {t.intent}</span>}
-                {typeof t.confidence === "number" && <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1"><Activity className="h-3.5 w-3.5" /> {t.confidence}%</span>}
+              <div className="relative mt-3 flex flex-wrap gap-2 text-xs">
+                {t.mood && <span className="inline-flex items-center gap-1.5 rounded-full bg-black/30 px-2.5 py-1 backdrop-blur"><m.Icon className="h-4 w-4" /> {t.mood}</span>}
+                {t.intent && <span className="inline-flex items-center gap-1.5 rounded-full bg-black/30 px-2.5 py-1 backdrop-blur"><IIcon className="h-4 w-4" /> {t.intent}</span>}
+                {typeof t.confidence === "number" && <span className="inline-flex items-center gap-1.5 rounded-full bg-black/30 px-2.5 py-1 backdrop-blur"><Activity className="h-3.5 w-3.5" /> {t.confidence}%</span>}
               </div>
               {t.scientific_basis && (
-                <p className="mt-3 flex items-start gap-2 text-xs text-muted-foreground">
-                  <Brain className="h-3.5 w-3.5 flex-none text-primary" />
+                <p className="relative mt-3 flex items-start gap-2 text-xs opacity-95">
+                  <Brain className="h-3.5 w-3.5 flex-none" />
                   <span>{t.scientific_basis}</span>
                 </p>
               )}
