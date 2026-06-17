@@ -776,28 +776,30 @@ function HistoryTab({ pets, avatarUrls, activePet, onChangeActive }: { pets: Pet
           const pet = t.pet_id ? petById[t.pet_id] : null;
           const url = pet?.avatar_url ? avatarUrls[pet.avatar_url] : undefined;
           return (
-            <div key={t.id} className="glass-card rounded-2xl p-5">
-              <div className="mb-3 flex items-center justify-between text-xs text-muted-foreground">
+            <div key={t.id} className={`relative overflow-hidden rounded-2xl border border-white/15 bg-gradient-to-br ${m.color} p-5 text-white shadow-glow`}>
+              <m.Icon className="pointer-events-none absolute -right-4 -top-4 h-32 w-32 text-white/15" strokeWidth={1.4} />
+              <div className="absolute inset-0 bg-gradient-to-tr from-black/25 via-transparent to-white/5 pointer-events-none" />
+              <div className="relative mb-3 flex items-center justify-between text-xs opacity-95">
                 <span className="flex items-center gap-2">
-                  {pet ? <PetAvatar pet={pet} url={url} size={28} /> : (t.species === "dog" ? <Dog className="h-5 w-5 text-primary" /> : <Cat className="h-5 w-5 text-primary" />)}
-                  <span className="font-medium text-foreground">{pet?.name ?? "Sin asignar"}</span>
+                  {pet ? <PetAvatar pet={pet} url={url} size={28} /> : (t.species === "dog" ? <Dog className="h-5 w-5" /> : <Cat className="h-5 w-5" />)}
+                  <span className="font-semibold">{pet?.name ?? "Sin asignar"}</span>
                 </span>
-                <span>{new Date(t.created_at).toLocaleString("es")}</span>
+                <span className="opacity-80">{new Date(t.created_at).toLocaleString("es")}</span>
               </div>
-              <div className="flex items-start gap-3">
-                <div className={`flex h-12 w-12 flex-none items-center justify-center rounded-2xl bg-gradient-to-br ${m.color} text-white shadow-glow`}>
-                  <m.Icon className="h-6 w-6" strokeWidth={2.2} />
+              <div className="relative flex items-start gap-3">
+                <div className="flex h-12 w-12 flex-none items-center justify-center rounded-2xl bg-black/30 text-2xl backdrop-blur">
+                  <span>{m.emoji}</span>
                 </div>
-                <p className="text-base font-medium leading-snug">"{t.translation}"</p>
+                <p className="text-base font-semibold leading-snug drop-shadow">"{t.translation}"</p>
               </div>
-              <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground">
-                {t.mood && <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1"><m.Icon className="h-4 w-4" /> {t.mood}</span>}
-                {t.intent && <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1"><IIcon className="h-4 w-4" /> {t.intent}</span>}
-                {typeof t.confidence === "number" && <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1"><Activity className="h-3.5 w-3.5" /> {t.confidence}%</span>}
+              <div className="relative mt-3 flex flex-wrap gap-2 text-xs">
+                {t.mood && <span className="inline-flex items-center gap-1.5 rounded-full bg-black/30 px-2.5 py-1 backdrop-blur"><m.Icon className="h-4 w-4" /> {t.mood}</span>}
+                {t.intent && <span className="inline-flex items-center gap-1.5 rounded-full bg-black/30 px-2.5 py-1 backdrop-blur"><IIcon className="h-4 w-4" /> {t.intent}</span>}
+                {typeof t.confidence === "number" && <span className="inline-flex items-center gap-1.5 rounded-full bg-black/30 px-2.5 py-1 backdrop-blur"><Activity className="h-3.5 w-3.5" /> {t.confidence}%</span>}
               </div>
               {t.scientific_basis && (
-                <p className="mt-3 flex items-start gap-2 text-xs text-muted-foreground">
-                  <Brain className="h-3.5 w-3.5 flex-none text-primary" />
+                <p className="relative mt-3 flex items-start gap-2 text-xs opacity-95">
+                  <Brain className="h-3.5 w-3.5 flex-none" />
                   <span>{t.scientific_basis}</span>
                 </p>
               )}
