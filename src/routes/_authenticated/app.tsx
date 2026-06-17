@@ -85,18 +85,24 @@ function PetAvatar({ pet, url, size = 44, ring = false }: { pet: Pet | null; url
 
 /* ---------- Mood / Intent visual mapping (premium Lucide icons) ---------- */
 type LucideType = typeof Smile;
-function moodVisual(mood: string | null | undefined): { Icon: LucideType; color: string; label: string } {
+type MoodVis = { Icon: LucideType; color: string; label: string; emoji: string };
+function moodVisual(mood: string | null | undefined): MoodVis {
   const m = (mood ?? "").toLowerCase();
-  if (/(felic|alegr|content|jugue|excit)/.test(m)) return { Icon: PartyPopper, color: "from-amber-400 to-orange-500", label: "feliz" };
-  if (/(triste|melanc|solo)/.test(m)) return { Icon: Frown, color: "from-sky-400 to-indigo-500", label: "triste" };
-  if (/(enoj|molest|frust|agresi|enfad)/.test(m)) return { Icon: AlertOctagon, color: "from-rose-500 to-red-600", label: "enojado" };
-  if (/(miedo|asust|ansios|nervi|estres)/.test(m)) return { Icon: ShieldAlert, color: "from-violet-400 to-purple-600", label: "asustado" };
-  if (/(relaj|calm|tranq|som)/.test(m)) return { Icon: Sun, color: "from-emerald-400 to-teal-500", label: "relajado" };
-  if (/(curi|alert|atent)/.test(m)) return { Icon: Eye, color: "from-cyan-400 to-blue-500", label: "alerta" };
-  if (/(hambr|comida|sed)/.test(m)) return { Icon: Beef, color: "from-amber-500 to-rose-500", label: "hambriento" };
-  if (/(cariñ|amor|afect)/.test(m)) return { Icon: Heart, color: "from-pink-400 to-rose-500", label: "cariñoso" };
-  if (/(energ|hiper)/.test(m)) return { Icon: Zap, color: "from-yellow-400 to-amber-500", label: "enérgico" };
-  return { Icon: PawPrint, color: "from-primary to-accent", label: mood ?? "indefinido" };
+  if (/(felic|alegr|content|satisf)/.test(m)) return { Icon: Laugh, color: "from-emerald-400 via-green-500 to-teal-500", label: "feliz", emoji: "😄" };
+  if (/(jugue|jueg|excit|party)/.test(m)) return { Icon: PartyPopper, color: "from-amber-400 via-orange-500 to-rose-500", label: "juguetón", emoji: "🎉" };
+  if (/(saluda|hola)/.test(m)) return { Icon: MessageCircle, color: "from-teal-400 via-cyan-500 to-sky-500", label: "saludando", emoji: "👋" };
+  if (/(triste|melanc|solitar|solo|aburri)/.test(m)) return { Icon: Frown, color: "from-sky-400 via-indigo-500 to-blue-600", label: "triste", emoji: "😔" };
+  if (/(enoj|molest|frust|agresi|enfad|irrit|territ|advert)/.test(m)) return { Icon: AlertOctagon, color: "from-rose-500 via-red-500 to-orange-600", label: "molesto", emoji: "😤" };
+  if (/(miedo|asust|ansios|nervi|estres|defens)/.test(m)) return { Icon: ShieldAlert, color: "from-violet-400 via-purple-500 to-fuchsia-600", label: "asustado", emoji: "😨" };
+  if (/(relaj|calm|tranq|ronron|bienes)/.test(m)) return { Icon: Sun, color: "from-teal-400 via-emerald-500 to-green-600", label: "relajado", emoji: "😌" };
+  if (/(curi|alert|atent|vigil)/.test(m)) return { Icon: Eye, color: "from-cyan-400 via-sky-500 to-blue-500", label: "alerta", emoji: "👀" };
+  if (/(hambr|comida|sed|demand|buscando)/.test(m)) return { Icon: Beef, color: "from-amber-500 via-orange-500 to-red-500", label: "hambriento", emoji: "🍖" };
+  if (/(cariñ|amor|afect|sumis)/.test(m)) return { Icon: Heart, color: "from-pink-400 via-rose-500 to-fuchsia-500", label: "cariñoso", emoji: "❤️" };
+  if (/(energ|hiper)/.test(m)) return { Icon: Zap, color: "from-yellow-400 via-amber-500 to-orange-500", label: "enérgico", emoji: "⚡" };
+  if (/(sueño|dorm|descan|cansad)/.test(m)) return { Icon: Moon, color: "from-indigo-400 via-violet-500 to-purple-600", label: "con sueño", emoji: "😴" };
+  if (/(dolor|herid)/.test(m)) return { Icon: Flame, color: "from-red-500 via-rose-600 to-pink-600", label: "dolorido", emoji: "🤕" };
+  if (/(celo)/.test(m)) return { Icon: HeartHandshake, color: "from-pink-500 via-rose-500 to-red-500", label: "en celo", emoji: "💕" };
+  return { Icon: PawPrint, color: "from-emerald-500 via-teal-500 to-orange-500", label: mood ?? "indefinido", emoji: "🐾" };
 }
 
 function intentIcon(intent: string | null | undefined): LucideType {
