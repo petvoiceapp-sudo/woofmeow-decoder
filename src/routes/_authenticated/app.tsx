@@ -281,10 +281,10 @@ function PetSwitcher({ pets, active, avatarUrls, onChange }: { pets: Pet[]; acti
       <select
         value={active?.id ?? ""}
         onChange={(e) => onChange(e.target.value)}
-        className="cursor-pointer bg-transparent text-sm outline-none"
+        className="cursor-pointer bg-transparent text-sm font-medium text-foreground outline-none"
       >
         {pets.map((p) => (
-          <option key={p.id} value={p.id}>
+          <option key={p.id} value={p.id} className="bg-card text-foreground">
             {p.name}
           </option>
         ))}
