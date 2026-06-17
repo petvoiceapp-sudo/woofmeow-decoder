@@ -64,8 +64,10 @@ export function Recorder({ onRecorded, disabled }: Props) {
       <button
         disabled={disabled || preparing}
         onClick={recording ? stop : start}
-        className={`relative flex h-32 w-32 items-center justify-center rounded-full text-primary-foreground shadow-glow transition ${
-          recording ? "bg-destructive animate-pulse-ring" : "bg-brand"
+        className={`relative flex h-32 w-32 items-center justify-center rounded-full text-white shadow-glow transition ${
+          recording
+            ? "bg-gradient-to-br from-amber-400 via-orange-500 to-rose-500 animate-pulse-ring ring-4 ring-orange-400/40"
+            : "bg-brand"
         } disabled:opacity-60`}
         aria-label={recording ? "Detener" : "Grabar"}
       >
