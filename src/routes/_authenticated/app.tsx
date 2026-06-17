@@ -306,6 +306,8 @@ function TranslateTab({ activePet, pets, avatarUrls }: { activePet: Pet | null; 
 
   useEffect(() => { if (activePet) setSpecies(activePet.species); }, [activePet]);
   useEffect(() => { setPosture(""); setContext(""); }, [species]);
+  // Limpiar resultado anterior si se cambia de mascota o especie
+  useEffect(() => { setResult(null); setAudioUrl(null); }, [activePet?.id, species]);
 
   async function onRecorded({ base64, format, durationMs, blobUrl }: { base64: string; format: string; durationMs: number; blobUrl: string }) {
     setAudioUrl(blobUrl);
