@@ -294,7 +294,7 @@ function PetSwitcher({ pets, active, avatarUrls, onChange }: { pets: Pet[]; acti
 }
 
 /* -------- Translate Tab -------- */
-function TranslateTab({ activePet, pets, avatarUrls }: { activePet: Pet | null; pets: Pet[]; avatarUrls: Record<string, string> }) {
+function TranslateTab({ activePet, pets, avatarUrls, onChangeActive }: { activePet: Pet | null; pets: Pet[]; avatarUrls: Record<string, string>; onChangeActive: (id: string) => void }) {
   const qc = useQueryClient();
   const translate = useServerFn(translateSound);
   const [species, setSpecies] = useState<"dog" | "cat">(activePet?.species ?? "dog");
@@ -308,6 +308,15 @@ function TranslateTab({ activePet, pets, avatarUrls }: { activePet: Pet | null; 
   useEffect(() => { setPosture(""); setContext(""); }, [species]);
   // Limpiar resultado anterior si se cambia de mascota o especie
   useEffect(() => { setResult(null); setAudioUrl(null); }, [activePet?.id, species]);
+
+  // Cuando el usuario cambia la especie manualmente, mover la mascota activa a una de esa especie
+  function changeSpecies(next: "dog" | "cat") {
+    setSpecies(next);
+    if (activePet?.species !== next) {
+      const match = pets.find((p) => p.species === next);
+      if (match) onChangeActive(match.id);
+    }
+  }
 
   async function onRecorded({ base64, format, durationMs, blobUrl }: { base64: string; format: string; durationMs: number; blobUrl: string }) {
     setAudioUrl(blobUrl);
