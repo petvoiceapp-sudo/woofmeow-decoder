@@ -229,7 +229,7 @@ function AppPage() {
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-8 pb-28 md:pb-8">
-        {tab === "translate" && <TranslateTab activePet={activePet} pets={pets} avatarUrls={avatarUrls} />}
+        {tab === "translate" && <TranslateTab activePet={activePet} pets={pets} avatarUrls={avatarUrls} onChangeActive={setActivePetId} />}
         {tab === "pets" && <PetsTab pets={pets} avatarUrls={avatarUrls} />}
         {tab === "history" && <HistoryTab pets={pets} avatarUrls={avatarUrls} activePet={activePet} onChangeActive={setActivePetId} />}
         {tab === "chat" && <ChatTab activePet={activePet} avatarUrls={avatarUrls} />}
