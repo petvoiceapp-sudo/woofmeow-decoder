@@ -491,43 +491,48 @@ function ResultCard({ result, pet, petUrl, posture, context }: { result: Transla
 
   return (
     <div className="space-y-5">
-      {/* Top result — hero glass card with mood-tinted shadow */}
+      {/* Top result — translucent glass with mood-tinted glow */}
       <div
-        className={`relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br ${m.color} p-[1px]`}
-        style={{ boxShadow: "0 18px 60px -18px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.06)" }}
+        className="group relative overflow-hidden rounded-3xl border border-white/10 bg-card/40 p-6 backdrop-blur-2xl transition-all duration-300 hover:-translate-y-0.5 hover:border-white/20"
+        style={{
+          boxShadow: `0 20px 60px -20px rgba(${m.glow},0.55), 0 0 0 1px rgba(255,255,255,0.05), inset 0 1px 0 rgba(255,255,255,0.06)`,
+        }}
       >
-        <div className="relative overflow-hidden rounded-[calc(1.5rem-1px)] bg-card/70 p-6 backdrop-blur-2xl">
-          <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${m.color} opacity-[0.18]`} />
-          <m.Icon className="pointer-events-none absolute -right-6 -top-6 h-40 w-40 text-foreground/5" strokeWidth={1.4} />
-          <div className="relative flex items-start gap-4">
-            {pet && <PetAvatar pet={pet} url={petUrl} size={56} ring />}
-            <div className="flex-1">
-              <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-muted-foreground">
-                <span className="text-base">{m.emoji}</span>
-                {pet ? `${pet.name} dice` : "Tu mascota dice"}
-              </div>
-              <p className="mt-1 text-xl font-semibold leading-snug text-foreground">"{top.translation}"</p>
+        {/* soft tinted wash, very subtle */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-60 transition-opacity duration-300 group-hover:opacity-80"
+          style={{ background: `radial-gradient(120% 80% at 100% 0%, rgba(${m.glow},0.18), transparent 60%)` }}
+        />
+        <m.Icon className="pointer-events-none absolute -right-6 -top-6 h-40 w-40 opacity-[0.08]" strokeWidth={1.2} style={{ color: m.accent }} />
+        <div className="relative flex items-start gap-4">
+          {pet && <PetAvatar pet={pet} url={petUrl} size={56} ring />}
+          <div className="flex-1">
+            <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-muted-foreground">
+              <m.Icon className="h-3.5 w-3.5" style={{ color: m.accent }} />
+              {pet ? `${pet.name} dice` : "Tu mascota dice"}
             </div>
-          </div>
-          <div className="relative mt-5 flex flex-wrap gap-2 text-xs">
-            {top.mood && (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-background/40 px-3 py-1.5 text-foreground/90 backdrop-blur">
-                <m.Icon className="h-4 w-4 text-primary" /> {top.mood}
-              </span>
-            )}
-            {top.intent && (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-background/40 px-3 py-1.5 text-foreground/90 backdrop-blur">
-                <IIcon className="h-4 w-4 text-accent" /> {top.intent}
-              </span>
-            )}
-            {typeof top.confidence === "number" && (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-background/40 px-3 py-1.5 text-foreground/90 backdrop-blur">
-                <Activity className="h-3.5 w-3.5 text-primary" /> {top.confidence}%
-              </span>
-            )}
+            <p className="mt-1 text-xl font-semibold leading-snug text-foreground">"{top.translation}"</p>
           </div>
         </div>
+        <div className="relative mt-5 flex flex-wrap gap-2 text-xs">
+          {top.mood && (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-background/40 px-3 py-1.5 text-foreground/90 backdrop-blur">
+              <m.Icon className="h-4 w-4" style={{ color: m.accent }} /> {top.mood}
+            </span>
+          )}
+          {top.intent && (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-background/40 px-3 py-1.5 text-foreground/90 backdrop-blur">
+              <IIcon className="h-4 w-4 text-accent" /> {top.intent}
+            </span>
+          )}
+          {typeof top.confidence === "number" && (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-background/40 px-3 py-1.5 text-foreground/90 backdrop-blur">
+              <Activity className="h-3.5 w-3.5" style={{ color: m.accent }} /> {top.confidence}%
+            </span>
+          )}
+        </div>
       </div>
+
 
       {(posture || context) && (
         <div className="flex flex-wrap gap-2 text-xs">
