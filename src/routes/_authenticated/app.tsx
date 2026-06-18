@@ -970,17 +970,28 @@ function AnalyzingScreen({ petName }: { petName: string }) {
     "Generando traducción final…",
   ];
   const [step, setStep] = useState(0);
-  const [progress, setProgress] = useState(5);
+  const [progress, setProgress] = useState(2);
   const [bars, setBars] = useState<number[]>(() => Array.from({ length: 36 }, () => 20 + Math.random() * 60));
 
   useEffect(() => {
     const t = setInterval(() => {
-      setProgress((p) => (p < 95 ? p + Math.random() * 4 : p));
-      setStep((s) => (s < steps.length - 1 && Math.random() > 0.55 ? s + 1 : s));
+      setProgress((p) => {
+        if (p >= 95) return p;
+        // Curva suave: avanza más rápido al inicio, más lento al final
+        const remaining = 95 - p;
+        const next = p + Math.max(0.4, remaining * 0.025);
+        return Math.min(95, next);
+      });
       setBars(Array.from({ length: 36 }, () => 15 + Math.random() * 75));
-    }, 650);
+    }, 320);
     return () => clearInterval(t);
   }, []);
+
+  // El paso visible se deriva del progreso real (no aleatorio)
+  useEffect(() => {
+    const idx = Math.min(steps.length - 1, Math.floor((progress / 95) * steps.length));
+    setStep(idx);
+  }, [progress, steps.length]);
 
   return (
     <div className="relative flex flex-col items-center gap-6 py-6">
