@@ -490,36 +490,41 @@ function ResultCard({ result, pet, petUrl, posture, context }: { result: Transla
 
   return (
     <div className="space-y-5">
-      {/* Top result — hero card (theme colors) */}
-      <div className={`relative overflow-hidden rounded-3xl border border-white/20 bg-gradient-to-br ${m.color} p-6 text-white shadow-glow`}>
-        <m.Icon className="absolute -right-6 -top-6 h-44 w-44 text-white/15" strokeWidth={1.4} />
-        <div className="absolute inset-0 bg-gradient-to-tr from-black/20 via-transparent to-white/10 pointer-events-none" />
-        <div className="relative flex items-start gap-4">
-          {pet && <PetAvatar pet={pet} url={petUrl} size={56} ring />}
-          <div className="flex-1">
-            <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest opacity-90">
-              <span className="text-base">{m.emoji}</span>
-              {pet ? `${pet.name} dice` : "Tu mascota dice"}
+      {/* Top result — hero glass card with mood-tinted shadow */}
+      <div
+        className={`relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br ${m.color} p-[1px]`}
+        style={{ boxShadow: "0 18px 60px -18px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.06)" }}
+      >
+        <div className="relative overflow-hidden rounded-[calc(1.5rem-1px)] bg-card/70 p-6 backdrop-blur-2xl">
+          <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${m.color} opacity-[0.18]`} />
+          <m.Icon className="pointer-events-none absolute -right-6 -top-6 h-40 w-40 text-foreground/5" strokeWidth={1.4} />
+          <div className="relative flex items-start gap-4">
+            {pet && <PetAvatar pet={pet} url={petUrl} size={56} ring />}
+            <div className="flex-1">
+              <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-muted-foreground">
+                <span className="text-base">{m.emoji}</span>
+                {pet ? `${pet.name} dice` : "Tu mascota dice"}
+              </div>
+              <p className="mt-1 text-xl font-semibold leading-snug text-foreground">"{top.translation}"</p>
             </div>
-            <p className="mt-1 text-xl font-semibold leading-snug drop-shadow">"{top.translation}"</p>
           </div>
-        </div>
-        <div className="relative mt-5 flex flex-wrap gap-2 text-xs">
-          {top.mood && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-black/30 px-3 py-1.5 backdrop-blur">
-              <m.Icon className="h-4 w-4" /> {top.mood}
-            </span>
-          )}
-          {top.intent && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-black/30 px-3 py-1.5 backdrop-blur">
-              <IIcon className="h-4 w-4" /> {top.intent}
-            </span>
-          )}
-          {typeof top.confidence === "number" && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-black/30 px-3 py-1.5 backdrop-blur">
-              <Activity className="h-3.5 w-3.5" /> {top.confidence}%
-            </span>
-          )}
+          <div className="relative mt-5 flex flex-wrap gap-2 text-xs">
+            {top.mood && (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-background/40 px-3 py-1.5 text-foreground/90 backdrop-blur">
+                <m.Icon className="h-4 w-4 text-primary" /> {top.mood}
+              </span>
+            )}
+            {top.intent && (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-background/40 px-3 py-1.5 text-foreground/90 backdrop-blur">
+                <IIcon className="h-4 w-4 text-accent" /> {top.intent}
+              </span>
+            )}
+            {typeof top.confidence === "number" && (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-background/40 px-3 py-1.5 text-foreground/90 backdrop-blur">
+                <Activity className="h-3.5 w-3.5 text-primary" /> {top.confidence}%
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
