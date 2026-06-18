@@ -356,13 +356,13 @@ function TranslateTab({ activePet, pets, avatarUrls, onChangeActive }: { activeP
           </h2>
           <div className="flex rounded-full bg-muted p-1 text-xs">
             <button
-              onClick={() => setSpecies("dog")}
+              onClick={() => changeSpecies("dog")}
               className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 transition ${species === "dog" ? "bg-brand text-primary-foreground" : "text-muted-foreground"}`}
             >
               <Dog className="h-3.5 w-3.5" /> Perro
             </button>
             <button
-              onClick={() => setSpecies("cat")}
+              onClick={() => changeSpecies("cat")}
               className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 transition ${species === "cat" ? "bg-brand text-primary-foreground" : "text-muted-foreground"}`}
             >
               <Cat className="h-3.5 w-3.5" /> Gato
