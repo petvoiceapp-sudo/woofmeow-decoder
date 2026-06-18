@@ -229,7 +229,7 @@ function AppPage() {
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-8 pb-28 md:pb-8">
-        {tab === "translate" && <TranslateTab activePet={activePet} pets={pets} avatarUrls={avatarUrls} />}
+        {tab === "translate" && <TranslateTab activePet={activePet} pets={pets} avatarUrls={avatarUrls} onChangeActive={setActivePetId} />}
         {tab === "pets" && <PetsTab pets={pets} avatarUrls={avatarUrls} />}
         {tab === "history" && <HistoryTab pets={pets} avatarUrls={avatarUrls} activePet={activePet} onChangeActive={setActivePetId} />}
         {tab === "chat" && <ChatTab activePet={activePet} avatarUrls={avatarUrls} />}
@@ -294,7 +294,7 @@ function PetSwitcher({ pets, active, avatarUrls, onChange }: { pets: Pet[]; acti
 }
 
 /* -------- Translate Tab -------- */
-function TranslateTab({ activePet, pets, avatarUrls }: { activePet: Pet | null; pets: Pet[]; avatarUrls: Record<string, string> }) {
+function TranslateTab({ activePet, pets, avatarUrls, onChangeActive }: { activePet: Pet | null; pets: Pet[]; avatarUrls: Record<string, string>; onChangeActive: (id: string) => void }) {
   const qc = useQueryClient();
   const translate = useServerFn(translateSound);
   const [species, setSpecies] = useState<"dog" | "cat">(activePet?.species ?? "dog");
@@ -308,6 +308,15 @@ function TranslateTab({ activePet, pets, avatarUrls }: { activePet: Pet | null; 
   useEffect(() => { setPosture(""); setContext(""); }, [species]);
   // Limpiar resultado anterior si se cambia de mascota o especie
   useEffect(() => { setResult(null); setAudioUrl(null); }, [activePet?.id, species]);
+
+  // Cuando el usuario cambia la especie manualmente, mover la mascota activa a una de esa especie
+  function changeSpecies(next: "dog" | "cat") {
+    setSpecies(next);
+    if (activePet?.species !== next) {
+      const match = pets.find((p) => p.species === next);
+      if (match) onChangeActive(match.id);
+    }
+  }
 
   async function onRecorded({ base64, format, durationMs, blobUrl }: { base64: string; format: string; durationMs: number; blobUrl: string }) {
     setAudioUrl(blobUrl);
@@ -347,13 +356,13 @@ function TranslateTab({ activePet, pets, avatarUrls }: { activePet: Pet | null; 
           </h2>
           <div className="flex rounded-full bg-muted p-1 text-xs">
             <button
-              onClick={() => setSpecies("dog")}
+              onClick={() => changeSpecies("dog")}
               className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 transition ${species === "dog" ? "bg-brand text-primary-foreground" : "text-muted-foreground"}`}
             >
               <Dog className="h-3.5 w-3.5" /> Perro
             </button>
             <button
-              onClick={() => setSpecies("cat")}
+              onClick={() => changeSpecies("cat")}
               className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 transition ${species === "cat" ? "bg-brand text-primary-foreground" : "text-muted-foreground"}`}
             >
               <Cat className="h-3.5 w-3.5" /> Gato
@@ -481,36 +490,41 @@ function ResultCard({ result, pet, petUrl, posture, context }: { result: Transla
 
   return (
     <div className="space-y-5">
-      {/* Top result — hero card (theme colors) */}
-      <div className={`relative overflow-hidden rounded-3xl border border-white/20 bg-gradient-to-br ${m.color} p-6 text-white shadow-glow`}>
-        <m.Icon className="absolute -right-6 -top-6 h-44 w-44 text-white/15" strokeWidth={1.4} />
-        <div className="absolute inset-0 bg-gradient-to-tr from-black/20 via-transparent to-white/10 pointer-events-none" />
-        <div className="relative flex items-start gap-4">
-          {pet && <PetAvatar pet={pet} url={petUrl} size={56} ring />}
-          <div className="flex-1">
-            <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest opacity-90">
-              <span className="text-base">{m.emoji}</span>
-              {pet ? `${pet.name} dice` : "Tu mascota dice"}
+      {/* Top result — hero glass card with mood-tinted shadow */}
+      <div
+        className={`relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br ${m.color} p-[1px]`}
+        style={{ boxShadow: "0 18px 60px -18px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.06)" }}
+      >
+        <div className="relative overflow-hidden rounded-[calc(1.5rem-1px)] bg-card/70 p-6 backdrop-blur-2xl">
+          <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${m.color} opacity-[0.18]`} />
+          <m.Icon className="pointer-events-none absolute -right-6 -top-6 h-40 w-40 text-foreground/5" strokeWidth={1.4} />
+          <div className="relative flex items-start gap-4">
+            {pet && <PetAvatar pet={pet} url={petUrl} size={56} ring />}
+            <div className="flex-1">
+              <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest text-muted-foreground">
+                <span className="text-base">{m.emoji}</span>
+                {pet ? `${pet.name} dice` : "Tu mascota dice"}
+              </div>
+              <p className="mt-1 text-xl font-semibold leading-snug text-foreground">"{top.translation}"</p>
             </div>
-            <p className="mt-1 text-xl font-semibold leading-snug drop-shadow">"{top.translation}"</p>
           </div>
-        </div>
-        <div className="relative mt-5 flex flex-wrap gap-2 text-xs">
-          {top.mood && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-black/30 px-3 py-1.5 backdrop-blur">
-              <m.Icon className="h-4 w-4" /> {top.mood}
-            </span>
-          )}
-          {top.intent && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-black/30 px-3 py-1.5 backdrop-blur">
-              <IIcon className="h-4 w-4" /> {top.intent}
-            </span>
-          )}
-          {typeof top.confidence === "number" && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-black/30 px-3 py-1.5 backdrop-blur">
-              <Activity className="h-3.5 w-3.5" /> {top.confidence}%
-            </span>
-          )}
+          <div className="relative mt-5 flex flex-wrap gap-2 text-xs">
+            {top.mood && (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-background/40 px-3 py-1.5 text-foreground/90 backdrop-blur">
+                <m.Icon className="h-4 w-4 text-primary" /> {top.mood}
+              </span>
+            )}
+            {top.intent && (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-background/40 px-3 py-1.5 text-foreground/90 backdrop-blur">
+                <IIcon className="h-4 w-4 text-accent" /> {top.intent}
+              </span>
+            )}
+            {typeof top.confidence === "number" && (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-background/40 px-3 py-1.5 text-foreground/90 backdrop-blur">
+                <Activity className="h-3.5 w-3.5 text-primary" /> {top.confidence}%
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
@@ -961,17 +975,28 @@ function AnalyzingScreen({ petName }: { petName: string }) {
     "Generando traducción final…",
   ];
   const [step, setStep] = useState(0);
-  const [progress, setProgress] = useState(5);
+  const [progress, setProgress] = useState(2);
   const [bars, setBars] = useState<number[]>(() => Array.from({ length: 36 }, () => 20 + Math.random() * 60));
 
   useEffect(() => {
     const t = setInterval(() => {
-      setProgress((p) => (p < 95 ? p + Math.random() * 4 : p));
-      setStep((s) => (s < steps.length - 1 && Math.random() > 0.55 ? s + 1 : s));
+      setProgress((p) => {
+        if (p >= 95) return p;
+        // Curva suave: avanza más rápido al inicio, más lento al final
+        const remaining = 95 - p;
+        const next = p + Math.max(0.4, remaining * 0.025);
+        return Math.min(95, next);
+      });
       setBars(Array.from({ length: 36 }, () => 15 + Math.random() * 75));
-    }, 650);
+    }, 320);
     return () => clearInterval(t);
   }, []);
+
+  // El paso visible se deriva del progreso real (no aleatorio)
+  useEffect(() => {
+    const idx = Math.min(steps.length - 1, Math.floor((progress / 95) * steps.length));
+    setStep(idx);
+  }, [progress, steps.length]);
 
   return (
     <div className="relative flex flex-col items-center gap-6 py-6">
