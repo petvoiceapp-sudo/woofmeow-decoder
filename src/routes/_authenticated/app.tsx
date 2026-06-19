@@ -97,13 +97,14 @@ function moodVisual(mood: string | null | undefined): MoodVis {
   if (/(miedo|asust|ansios|nervi|estres|defens)/.test(m)) return { Icon: ShieldAlert, color: "from-violet-400 via-purple-500 to-fuchsia-600", label: "asustado", glow: "168,85,247", accent: "#c084fc" };
   if (/(relaj|calm|tranq|ronron|bienes)/.test(m)) return { Icon: Sun, color: "from-teal-400 via-emerald-500 to-green-600", label: "relajado", glow: "20,184,166", accent: "#2dd4bf" };
   if (/(curi|alert|atent|vigil)/.test(m)) return { Icon: Eye, color: "from-cyan-400 via-sky-500 to-blue-500", label: "alerta", glow: "6,182,212", accent: "#22d3ee" };
-  if (/(hambr|comida|sed|demand|buscando)/.test(m)) return { Icon: Beef, color: "from-amber-500 via-orange-500 to-red-500", label: "hambriento", glow: "245,158,11", accent: "#fbbf24" };
+  if (/(rasc|pica|picaz|prurit|comez)/.test(m)) return { Icon: Hand, color: "from-lime-400 via-emerald-500 to-teal-500", label: "con picazón", glow: "132,204,22", accent: "#a3e635" };
+  if (/(hambr|comid|apetit|sed|^demand)/.test(m)) return { Icon: Utensils, color: "from-amber-500 via-orange-500 to-red-500", label: "hambriento", glow: "245,158,11", accent: "#fbbf24" };
   if (/(cariñ|amor|afect|sumis)/.test(m)) return { Icon: Heart, color: "from-pink-400 via-rose-500 to-fuchsia-500", label: "cariñoso", glow: "236,72,153", accent: "#f472b6" };
   if (/(energ|hiper)/.test(m)) return { Icon: Zap, color: "from-yellow-400 via-amber-500 to-orange-500", label: "enérgico", glow: "234,179,8", accent: "#facc15" };
   if (/(sueño|dorm|descan|cansad)/.test(m)) return { Icon: Moon, color: "from-indigo-400 via-violet-500 to-purple-600", label: "con sueño", glow: "139,92,246", accent: "#a78bfa" };
-  if (/(dolor|herid)/.test(m)) return { Icon: Flame, color: "from-red-500 via-rose-600 to-pink-600", label: "dolorido", glow: "244,63,94", accent: "#fb7185" };
+  if (/(dolor|herid|molestia\sfis)/.test(m)) return { Icon: Flame, color: "from-red-500 via-rose-600 to-pink-600", label: "dolorido", glow: "244,63,94", accent: "#fb7185" };
   if (/(celo)/.test(m)) return { Icon: HeartHandshake, color: "from-pink-500 via-rose-500 to-red-500", label: "en celo", glow: "236,72,153", accent: "#f472b6" };
-  return { Icon: PawPrint, color: "from-emerald-500 via-teal-500 to-orange-500", label: mood ?? "indefinido", glow: "16,185,129", accent: "#34d399" };
+  return { Icon: Sparkles, color: "from-emerald-500 via-teal-500 to-orange-500", label: mood ?? "indefinido", glow: "16,185,129", accent: "#34d399" };
 }
 
 function intentIcon(intent: string | null | undefined): LucideType {
