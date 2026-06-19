@@ -110,7 +110,8 @@ function moodVisual(mood: string | null | undefined): MoodVis {
 function intentIcon(intent: string | null | undefined): LucideType {
   const i = (intent ?? "").toLowerCase();
   if (/(juga|jueg)/.test(i)) return Gamepad2;
-  if (/(comer|comid|hambr)/.test(i)) return Beef;
+  if (/(comer|comid|hambr|apetit)/.test(i)) return Utensils;
+  if (/(rasc|pica|comez|prurit)/.test(i)) return Hand;
   if (/(salir|paseo|caminar)/.test(i)) return Footprints;
   if (/(atenc|mira|cari)/.test(i)) return Hand;
   if (/(alerta|aviso|vigil|defen|protec)/.test(i)) return Bell;
