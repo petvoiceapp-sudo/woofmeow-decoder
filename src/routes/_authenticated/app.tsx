@@ -495,17 +495,19 @@ function ResultCard({ result, pet, petUrl, posture, context }: { result: Transla
     <div className="space-y-5">
       {/* Top result — translucent glass with mood-tinted glow */}
       <div
-        className="group relative overflow-hidden rounded-3xl border border-white/10 bg-card/40 p-6 backdrop-blur-2xl transition-all duration-300 hover:-translate-y-0.5 hover:border-white/20"
+        className="group relative overflow-hidden rounded-3xl border p-6 backdrop-blur-2xl transition-all duration-300 hover:-translate-y-0.5"
         style={{
-          boxShadow: `0 20px 60px -20px rgba(${m.glow},0.55), 0 0 0 1px rgba(255,255,255,0.05), inset 0 1px 0 rgba(255,255,255,0.06)`,
+          background: `linear-gradient(135deg, rgba(${m.glow},0.22), rgba(${m.glow},0.08) 60%, hsl(var(--card) / 0.55))`,
+          borderColor: `rgba(${m.glow},0.35)`,
+          boxShadow: `0 24px 70px -22px rgba(${m.glow},0.6), 0 0 0 1px rgba(255,255,255,0.06), inset 0 1px 0 rgba(255,255,255,0.1)`,
         }}
       >
         {/* soft tinted wash, very subtle */}
         <div
-          className="pointer-events-none absolute inset-0 opacity-60 transition-opacity duration-300 group-hover:opacity-80"
-          style={{ background: `radial-gradient(120% 80% at 100% 0%, rgba(${m.glow},0.18), transparent 60%)` }}
+          className="pointer-events-none absolute inset-0 opacity-70 transition-opacity duration-300 group-hover:opacity-100"
+          style={{ background: `radial-gradient(120% 80% at 100% 0%, rgba(${m.glow},0.28), transparent 60%)` }}
         />
-        <m.Icon className="pointer-events-none absolute -right-6 -top-6 h-40 w-40 opacity-[0.08]" strokeWidth={1.2} style={{ color: m.accent }} />
+        <m.Icon className="pointer-events-none absolute -right-6 -top-6 h-40 w-40 opacity-[0.12]" strokeWidth={1.2} style={{ color: m.accent }} />
         <div className="relative flex items-start gap-4">
           {pet && <PetAvatar pet={pet} url={petUrl} size={56} ring />}
           <div className="flex-1">
