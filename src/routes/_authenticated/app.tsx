@@ -802,16 +802,18 @@ function HistoryTab({ pets, avatarUrls, activePet, onChangeActive }: { pets: Pet
           return (
             <div
               key={t.id}
-              className="group relative overflow-hidden rounded-2xl border border-white/10 bg-card/40 p-5 backdrop-blur-2xl transition-all duration-300 hover:-translate-y-0.5 hover:border-white/20"
+              className="group relative overflow-hidden rounded-2xl border p-5 backdrop-blur-2xl transition-all duration-300 hover:-translate-y-0.5"
               style={{
-                boxShadow: `0 16px 50px -18px rgba(${m.glow},0.5), 0 0 0 1px rgba(255,255,255,0.04), inset 0 1px 0 rgba(255,255,255,0.05)`,
+                background: `linear-gradient(135deg, rgba(${m.glow},0.2), rgba(${m.glow},0.07) 60%, hsl(var(--card) / 0.55))`,
+                borderColor: `rgba(${m.glow},0.32)`,
+                boxShadow: `0 18px 55px -20px rgba(${m.glow},0.55), 0 0 0 1px rgba(255,255,255,0.05), inset 0 1px 0 rgba(255,255,255,0.08)`,
               }}
             >
               <div
-                className="pointer-events-none absolute inset-0 opacity-60 transition-opacity duration-300 group-hover:opacity-90"
-                style={{ background: `radial-gradient(120% 80% at 100% 0%, rgba(${m.glow},0.16), transparent 60%)` }}
+                className="pointer-events-none absolute inset-0 opacity-70 transition-opacity duration-300 group-hover:opacity-100"
+                style={{ background: `radial-gradient(120% 80% at 100% 0%, rgba(${m.glow},0.24), transparent 60%)` }}
               />
-              <m.Icon className="pointer-events-none absolute -right-4 -top-4 h-32 w-32 opacity-[0.07]" strokeWidth={1.2} style={{ color: m.accent }} />
+              <m.Icon className="pointer-events-none absolute -right-4 -top-4 h-32 w-32 opacity-[0.1]" strokeWidth={1.2} style={{ color: m.accent }} />
               <div className="relative mb-3 flex items-center justify-between text-xs text-muted-foreground">
                 <span className="flex items-center gap-2">
                   {pet ? <PetAvatar pet={pet} url={url} size={28} /> : (t.species === "dog" ? <Dog className="h-5 w-5" /> : <Cat className="h-5 w-5" />)}
