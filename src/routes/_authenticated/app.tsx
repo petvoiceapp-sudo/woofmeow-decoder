@@ -485,6 +485,7 @@ function TranslateTab({ activePet, pets, avatarUrls, onChangeActive }: { activeP
 
         {result && <ResultCard result={result} pet={activePet} petUrl={petUrl} posture={posture} context={context} />}
       </div>
+      <UpgradeModal open={showUpgrade} onClose={() => setShowUpgrade(false)} />
     </div>
   );
 }
