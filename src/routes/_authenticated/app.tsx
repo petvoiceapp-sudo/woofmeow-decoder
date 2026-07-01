@@ -489,6 +489,112 @@ function TranslateTab({ activePet, pets, avatarUrls, onChangeActive }: { activeP
   );
 }
 
+/* -------- Usage banner + Upgrade modal -------- */
+function UsageBanner({ usage, onUpgrade, petName }: { usage: ReturnType<typeof useUsage>; onUpgrade: () => void; petName?: string }) {
+  if (usage.premium) {
+    return (
+      <div className="mt-3 flex items-center justify-between rounded-2xl border border-amber-400/30 bg-gradient-to-r from-amber-400/10 via-orange-400/10 to-rose-400/10 px-4 py-2.5 text-xs">
+        <span className="flex items-center gap-2 font-semibold text-amber-300">
+          <Sparkles className="h-3.5 w-3.5" /> Plan Premium activo · traducciones ilimitadas
+        </span>
+      </div>
+    );
+  }
+  const pct = Math.min(100, (usage.used / usage.limit) * 100);
+  const out = usage.remaining <= 0;
+  return (
+    <div className="mt-3 rounded-2xl border border-border/60 bg-card/50 p-3 backdrop-blur">
+      <div className="mb-2 flex items-center justify-between text-[11px]">
+        <span className="font-semibold text-muted-foreground">
+          Plan Gratis · {usage.remaining}/{usage.limit} traducciones hoy{petName ? ` para ${petName}` : ""}
+        </span>
+        <button
+          onClick={onUpgrade}
+          className="rounded-full bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 px-3 py-1 text-[10px] font-bold text-black shadow-glow transition hover:brightness-110"
+        >
+          ✨ Hazte Premium
+        </button>
+      </div>
+      <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+        <div
+          className={`h-full rounded-full transition-all ${out ? "bg-gradient-to-r from-rose-500 to-red-500" : "bg-gradient-to-r from-emerald-400 via-teal-400 to-primary"}`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      {out && (
+        <p className="mt-2 text-[10px] text-rose-300">
+          Llegaste al límite gratis de hoy. Vuelve mañana o hazte Premium para traducir sin límite.
+        </p>
+      )}
+    </div>
+  );
+}
+
+function UpgradeModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  if (!open) return null;
+  const features: { free: string; premium: string }[] = [
+    { free: "3 traducciones/día por mascota", premium: "Traducciones ilimitadas" },
+    { free: "Con publicidad", premium: "Sin publicidad" },
+    { free: "Historial 30 días", premium: "Historial ilimitado + export PDF" },
+    { free: "Análisis estándar", premium: "IA científica avanzada (Pro)" },
+    { free: "1 mascota destacada", premium: "Mascotas ilimitadas + diario avanzado" },
+    { free: "Sin alertas veterinarias", premium: "Alertas de salud y bienestar" },
+  ];
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm" onClick={onClose}>
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-amber-400/30 bg-card/95 p-6 shadow-2xl backdrop-blur-2xl"
+        style={{ boxShadow: "0 30px 80px -20px rgba(251,191,36,0.35)" }}
+      >
+        <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-gradient-to-br from-amber-400/40 via-orange-500/30 to-rose-500/20 blur-3xl" />
+        <div className="relative">
+          <div className="mb-1 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 px-3 py-1 text-[10px] font-bold text-black">
+            <Sparkles className="h-3 w-3" /> PAWLINGO PREMIUM
+          </div>
+          <h3 className="mt-2 text-2xl font-bold">Desbloquea todo el potencial</h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Traduce sin límites, sin publicidad y con análisis científico avanzado.
+          </p>
+
+          <div className="mt-5 overflow-hidden rounded-2xl border border-border/60">
+            <div className="grid grid-cols-2 border-b border-border/60 bg-muted/40 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <div className="p-3">Gratis</div>
+              <div className="p-3 text-amber-300">Premium</div>
+            </div>
+            {features.map((f, i) => (
+              <div key={i} className="grid grid-cols-2 border-b border-border/40 text-xs last:border-0">
+                <div className="p-3 text-muted-foreground">{f.free}</div>
+                <div className="p-3 font-medium text-foreground">✨ {f.premium}</div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-5 flex flex-col gap-2 sm:flex-row">
+            <button
+              onClick={() => {
+                toast.info("Los pagos estarán disponibles próximamente. ¡Gracias por tu interés!");
+              }}
+              className="flex-1 rounded-2xl bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 px-4 py-3 text-sm font-bold text-black shadow-glow transition hover:brightness-110"
+            >
+              Hazte Premium — Próximamente
+            </button>
+            <button
+              onClick={onClose}
+              className="rounded-2xl border border-border/60 px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground"
+            >
+              Ahora no
+            </button>
+          </div>
+          <p className="mt-3 text-center text-[10px] text-muted-foreground">
+            Estamos afinando los pagos. Mientras tanto disfrutas de 3 traducciones diarias por mascota.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* -------- ChipPicker (postura / contexto) -------- */
 function ChipPicker({ label, icon, value, onChange, options }: { label: string; icon: React.ReactNode; value: string; onChange: (v: string) => void; options: ChipOption[] }) {
   return (
