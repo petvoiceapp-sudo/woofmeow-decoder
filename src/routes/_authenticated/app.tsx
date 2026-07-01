@@ -296,6 +296,40 @@ function PetSwitcher({ pets, active, avatarUrls, onChange }: { pets: Pet[]; acti
   );
 }
 
+/* -------- Freemium daily limit (localStorage, 3/día por mascota) -------- */
+const FREE_DAILY_LIMIT = 3;
+function todayKey() { return new Date().toISOString().slice(0, 10); }
+function usageKey(petId: string | null | undefined) {
+  return `pawlingo_uses_${petId ?? "guest"}_${todayKey()}`;
+}
+function isPremium(): boolean {
+  return typeof window !== "undefined" && localStorage.getItem("pawlingo_premium") === "1";
+}
+function getUsageCount(petId: string | null | undefined): number {
+  if (typeof window === "undefined") return 0;
+  return Number(localStorage.getItem(usageKey(petId)) || "0");
+}
+function bumpUsage(petId: string | null | undefined) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(usageKey(petId), String(getUsageCount(petId) + 1));
+  window.dispatchEvent(new Event("pawlingo:usage"));
+}
+function useUsage(petId: string | null | undefined) {
+  const [used, setUsed] = useState(() => getUsageCount(petId));
+  const [premium, setPremium] = useState(() => isPremium());
+  useEffect(() => {
+    const sync = () => { setUsed(getUsageCount(petId)); setPremium(isPremium()); };
+    sync();
+    window.addEventListener("pawlingo:usage", sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      window.removeEventListener("pawlingo:usage", sync);
+      window.removeEventListener("storage", sync);
+    };
+  }, [petId]);
+  return { used, remaining: Math.max(0, FREE_DAILY_LIMIT - used), premium, limit: FREE_DAILY_LIMIT };
+}
+
 /* -------- Translate Tab -------- */
 function TranslateTab({ activePet, pets, avatarUrls, onChangeActive }: { activePet: Pet | null; pets: Pet[]; avatarUrls: Record<string, string>; onChangeActive: (id: string) => void }) {
   const qc = useQueryClient();
@@ -306,6 +340,8 @@ function TranslateTab({ activePet, pets, avatarUrls, onChangeActive }: { activeP
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [posture, setPosture] = useState<string>("");
   const [context, setContext] = useState<string>("");
+  const [showUpgrade, setShowUpgrade] = useState(false);
+  const usage = useUsage(activePet?.id);
 
   useEffect(() => { if (activePet) setSpecies(activePet.species); }, [activePet]);
   useEffect(() => { setPosture(""); setContext(""); }, [species]);
@@ -322,6 +358,11 @@ function TranslateTab({ activePet, pets, avatarUrls, onChangeActive }: { activeP
   }
 
   async function onRecorded({ base64, format, durationMs, blobUrl }: { base64: string; format: string; durationMs: number; blobUrl: string }) {
+    if (!usage.premium && usage.remaining <= 0) {
+      setShowUpgrade(true);
+      toast.error("Alcanzaste el límite gratis de hoy para esta mascota");
+      return;
+    }
     setAudioUrl(blobUrl);
     setLoading(true);
     setResult(null);
@@ -339,6 +380,7 @@ function TranslateTab({ activePet, pets, avatarUrls, onChangeActive }: { activeP
         },
       });
       setResult(res.result);
+      if (!usage.premium) bumpUsage(activePet?.id);
       qc.invalidateQueries({ queryKey: ["translations"] });
       toast.success("¡Traducción lista!");
     } catch (e) {
@@ -347,6 +389,7 @@ function TranslateTab({ activePet, pets, avatarUrls, onChangeActive }: { activeP
       setLoading(false);
     }
   }
+
 
   const petUrl = activePet?.avatar_url ? avatarUrls[activePet.avatar_url] : undefined;
 
