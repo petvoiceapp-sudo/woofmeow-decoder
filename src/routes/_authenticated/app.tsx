@@ -455,9 +455,11 @@ function TranslateTab({ activePet, pets, avatarUrls, onChangeActive }: { activeP
         </div>
 
         <div className="flex flex-col items-center gap-6 py-6">
-          <Recorder onRecorded={onRecorded} disabled={loading} />
+          <Recorder onRecorded={onRecorded} disabled={loading || (!usage.premium && usage.remaining <= 0)} />
           {audioUrl && <audio src={audioUrl} controls className="w-full" />}
         </div>
+
+        <UsageBanner usage={usage} onUpgrade={() => setShowUpgrade(true)} petName={activePet?.name} />
 
         {pets.length === 0 && (
           <p className="mt-2 rounded-xl bg-muted/40 p-3 text-center text-xs text-muted-foreground">
@@ -465,6 +467,7 @@ function TranslateTab({ activePet, pets, avatarUrls, onChangeActive }: { activeP
           </p>
         )}
       </div>
+
 
       <div className="glass-card rounded-3xl p-8">
         <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold">
