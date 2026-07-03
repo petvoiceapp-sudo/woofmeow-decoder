@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { translateSound, type TranslationResult } from "@/lib/translate.functions";
 import { chatWithPet } from "@/lib/chat.functions";
 import { Recorder } from "@/components/Recorder";
+import { OnboardingModal } from "@/components/OnboardingModal";
 import logo from "@/assets/logo.png";
 import dogCard from "@/assets/dog-card.png";
 import catCard from "@/assets/cat-card.png";
@@ -198,6 +199,7 @@ function AppPage() {
 
   return (
     <div className="min-h-screen">
+      <OnboardingModal />
       <header className="sticky top-0 z-30 border-b border-border/40 bg-background/60 backdrop-blur-xl">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
