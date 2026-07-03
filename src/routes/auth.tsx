@@ -16,6 +16,7 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [accepted, setAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -26,6 +27,10 @@ function AuthPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (mode === "signup" && !accepted) {
+      toast.error("Debes aceptar los Términos y la Política de Privacidad.");
+      return;
+    }
     setLoading(true);
     try {
       if (mode === "signup") {
@@ -136,6 +141,24 @@ function AuthPage() {
                 className="w-full rounded-xl border border-border bg-input/40 py-3 pl-10 pr-4 text-sm outline-none focus:border-primary"
               />
             </div>
+            {mode === "signup" && (
+              <label className="flex items-start gap-2 pt-1 text-xs text-muted-foreground">
+                <input
+                  type="checkbox"
+                  checked={accepted}
+                  onChange={(e) => setAccepted(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 accent-primary"
+                />
+                <span>
+                  Acepto los{" "}
+                  <a href="/terms" target="_blank" className="text-primary hover:underline">Términos</a>,{" "}
+                  la{" "}
+                  <a href="/privacy" target="_blank" className="text-primary hover:underline">Privacidad</a>{" "}
+                  y entiendo que Pawlingo no{" "}
+                  <a href="/disclaimer" target="_blank" className="text-primary hover:underline">sustituye al veterinario</a>.
+                </span>
+              </label>
+            )}
             <button
               type="submit"
               disabled={loading}
@@ -148,7 +171,7 @@ function AuthPage() {
         </div>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
-          Al continuar aceptas el uso responsable de la IA para fines informativos.
+          Pawlingo es una herramienta informativa basada en etología. No sustituye al veterinario.
         </p>
       </div>
     </div>
