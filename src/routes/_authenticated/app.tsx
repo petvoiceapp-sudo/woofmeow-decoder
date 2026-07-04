@@ -535,6 +535,8 @@ function UsageBanner({ usage, onUpgrade, petName }: { usage: ReturnType<typeof u
 }
 
 function UpgradeModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const checkout = useServerFn(createCheckoutSession);
+  const [loading, setLoading] = useState(false);
   if (!open) return null;
   const features: { free: string; premium: string }[] = [
     { free: "3 traducciones/día por mascota", premium: "Traducciones ilimitadas" },
@@ -544,6 +546,18 @@ function UpgradeModal({ open, onClose }: { open: boolean; onClose: () => void })
     { free: "1 mascota destacada", premium: "Mascotas ilimitadas + diario avanzado" },
     { free: "Sin alertas veterinarias", premium: "Alertas de salud y bienestar" },
   ];
+
+  async function upgrade() {
+    setLoading(true);
+    try {
+      const { url } = await checkout({ data: { returnUrl: window.location.origin + "/app" } });
+      if (url) window.location.href = url;
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "No se pudo iniciar el pago");
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm" onClick={onClose}>
       <div
@@ -554,7 +568,7 @@ function UpgradeModal({ open, onClose }: { open: boolean; onClose: () => void })
         <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-gradient-to-br from-amber-400/40 via-orange-500/30 to-rose-500/20 blur-3xl" />
         <div className="relative">
           <div className="mb-1 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 px-3 py-1 text-[10px] font-bold text-black">
-            <Sparkles className="h-3 w-3" /> PAWLINGO PREMIUM
+            <Sparkles className="h-3 w-3" /> PAWLINGO PRO
           </div>
           <h3 className="mt-2 text-2xl font-bold">Desbloquea todo el potencial</h3>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -564,7 +578,7 @@ function UpgradeModal({ open, onClose }: { open: boolean; onClose: () => void })
           <div className="mt-5 overflow-hidden rounded-2xl border border-border/60">
             <div className="grid grid-cols-2 border-b border-border/60 bg-muted/40 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
               <div className="p-3">Gratis</div>
-              <div className="p-3 text-amber-300">Premium</div>
+              <div className="p-3 text-amber-300">Pro</div>
             </div>
             {features.map((f, i) => (
               <div key={i} className="grid grid-cols-2 border-b border-border/40 text-xs last:border-0">
@@ -576,12 +590,12 @@ function UpgradeModal({ open, onClose }: { open: boolean; onClose: () => void })
 
           <div className="mt-5 flex flex-col gap-2 sm:flex-row">
             <button
-              onClick={() => {
-                toast.info("Los pagos estarán disponibles próximamente. ¡Gracias por tu interés!");
-              }}
-              className="flex-1 rounded-2xl bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 px-4 py-3 text-sm font-bold text-black shadow-glow transition hover:brightness-110"
+              onClick={upgrade}
+              disabled={loading}
+              className="flex-1 inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 px-4 py-3 text-sm font-bold text-black shadow-glow transition hover:brightness-110 disabled:opacity-70"
             >
-              Hazte Premium — Próximamente
+              {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+              Hazte Pro ahora
             </button>
             <button
               onClick={onClose}
@@ -591,7 +605,7 @@ function UpgradeModal({ open, onClose }: { open: boolean; onClose: () => void })
             </button>
           </div>
           <p className="mt-3 text-center text-[10px] text-muted-foreground">
-            Estamos afinando los pagos. Mientras tanto disfrutas de 3 traducciones diarias por mascota.
+            Pago seguro procesado por Stripe. Cancela cuando quieras.
           </p>
         </div>
       </div>
