@@ -13,6 +13,7 @@ import { Toaster } from "sonner";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase } from "@/integrations/supabase/client";
+import { LanguageProvider } from "@/lib/i18n";
 
 function NotFoundComponent() {
   return (
@@ -97,6 +98,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
       { rel: "icon", type: "image/png", sizes: "192x192", href: "/icon-192.png" },
     ],
+    scripts: [
+      {
+        src: "https://plausible.io/js/script.js",
+        defer: true,
+        "data-domain": "woofmeow-decoder.lovable.app",
+      },
+    ],
   }),
   shellComponent: RootShell,
   component: RootComponent,
@@ -133,8 +141,10 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Outlet />
-      <Toaster theme="dark" position="top-center" richColors />
+      <LanguageProvider>
+        <Outlet />
+        <Toaster theme="dark" position="top-center" richColors />
+      </LanguageProvider>
     </QueryClientProvider>
   );
 }

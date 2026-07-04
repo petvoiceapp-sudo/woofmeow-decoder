@@ -15,8 +15,11 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { translateSound, type TranslationResult } from "@/lib/translate.functions";
 import { chatWithPet } from "@/lib/chat.functions";
+import { createCheckoutSession, createBillingPortalSession } from "@/lib/stripe.functions";
+import { useSubscription } from "@/hooks/useSubscription";
 import { Recorder } from "@/components/Recorder";
 import { OnboardingModal } from "@/components/OnboardingModal";
+import { WeeklyReportButton } from "@/components/WeeklyReport";
 import logo from "@/assets/logo.png";
 import dogCard from "@/assets/dog-card.png";
 import catCard from "@/assets/cat-card.png";
@@ -298,14 +301,11 @@ function PetSwitcher({ pets, active, avatarUrls, onChange }: { pets: Pet[]; acti
   );
 }
 
-/* -------- Freemium daily limit (localStorage, 3/día por mascota) -------- */
+/* -------- Freemium daily limit (server-backed premium) -------- */
 const FREE_DAILY_LIMIT = 3;
 function todayKey() { return new Date().toISOString().slice(0, 10); }
 function usageKey(petId: string | null | undefined) {
   return `pawlingo_uses_${petId ?? "guest"}_${todayKey()}`;
-}
-function isPremium(): boolean {
-  return typeof window !== "undefined" && localStorage.getItem("pawlingo_premium") === "1";
 }
 function getUsageCount(petId: string | null | undefined): number {
   if (typeof window === "undefined") return 0;
@@ -317,10 +317,11 @@ function bumpUsage(petId: string | null | undefined) {
   window.dispatchEvent(new Event("pawlingo:usage"));
 }
 function useUsage(petId: string | null | undefined) {
+  const { data: sub } = useSubscription();
+  const premium = sub?.plan === "pro";
   const [used, setUsed] = useState(() => getUsageCount(petId));
-  const [premium, setPremium] = useState(() => isPremium());
   useEffect(() => {
-    const sync = () => { setUsed(getUsageCount(petId)); setPremium(isPremium()); };
+    const sync = () => setUsed(getUsageCount(petId));
     sync();
     window.addEventListener("pawlingo:usage", sync);
     window.addEventListener("storage", sync);
@@ -534,6 +535,8 @@ function UsageBanner({ usage, onUpgrade, petName }: { usage: ReturnType<typeof u
 }
 
 function UpgradeModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const checkout = useServerFn(createCheckoutSession);
+  const [loading, setLoading] = useState(false);
   if (!open) return null;
   const features: { free: string; premium: string }[] = [
     { free: "3 traducciones/día por mascota", premium: "Traducciones ilimitadas" },
@@ -543,6 +546,18 @@ function UpgradeModal({ open, onClose }: { open: boolean; onClose: () => void })
     { free: "1 mascota destacada", premium: "Mascotas ilimitadas + diario avanzado" },
     { free: "Sin alertas veterinarias", premium: "Alertas de salud y bienestar" },
   ];
+
+  async function upgrade() {
+    setLoading(true);
+    try {
+      const { url } = await checkout({ data: { returnUrl: window.location.origin + "/app" } });
+      if (url) window.location.href = url;
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "No se pudo iniciar el pago");
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm" onClick={onClose}>
       <div
@@ -553,7 +568,7 @@ function UpgradeModal({ open, onClose }: { open: boolean; onClose: () => void })
         <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-gradient-to-br from-amber-400/40 via-orange-500/30 to-rose-500/20 blur-3xl" />
         <div className="relative">
           <div className="mb-1 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 px-3 py-1 text-[10px] font-bold text-black">
-            <Sparkles className="h-3 w-3" /> PAWLINGO PREMIUM
+            <Sparkles className="h-3 w-3" /> PAWLINGO PRO
           </div>
           <h3 className="mt-2 text-2xl font-bold">Desbloquea todo el potencial</h3>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -563,7 +578,7 @@ function UpgradeModal({ open, onClose }: { open: boolean; onClose: () => void })
           <div className="mt-5 overflow-hidden rounded-2xl border border-border/60">
             <div className="grid grid-cols-2 border-b border-border/60 bg-muted/40 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
               <div className="p-3">Gratis</div>
-              <div className="p-3 text-amber-300">Premium</div>
+              <div className="p-3 text-amber-300">Pro</div>
             </div>
             {features.map((f, i) => (
               <div key={i} className="grid grid-cols-2 border-b border-border/40 text-xs last:border-0">
@@ -575,12 +590,12 @@ function UpgradeModal({ open, onClose }: { open: boolean; onClose: () => void })
 
           <div className="mt-5 flex flex-col gap-2 sm:flex-row">
             <button
-              onClick={() => {
-                toast.info("Los pagos estarán disponibles próximamente. ¡Gracias por tu interés!");
-              }}
-              className="flex-1 rounded-2xl bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 px-4 py-3 text-sm font-bold text-black shadow-glow transition hover:brightness-110"
+              onClick={upgrade}
+              disabled={loading}
+              className="flex-1 inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 px-4 py-3 text-sm font-bold text-black shadow-glow transition hover:brightness-110 disabled:opacity-70"
             >
-              Hazte Premium — Próximamente
+              {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+              Hazte Pro ahora
             </button>
             <button
               onClick={onClose}
@@ -590,7 +605,7 @@ function UpgradeModal({ open, onClose }: { open: boolean; onClose: () => void })
             </button>
           </div>
           <p className="mt-3 text-center text-[10px] text-muted-foreground">
-            Estamos afinando los pagos. Mientras tanto disfrutas de 3 traducciones diarias por mascota.
+            Pago seguro procesado por Stripe. Cancela cuando quieras.
           </p>
         </div>
       </div>
@@ -1384,6 +1399,35 @@ function DiaryTab({ pets, avatarUrls, activePet, onChangeActive }: { pets: Pet[]
 /* -------- Settings Tab -------- */
 function SettingsTab({ onSignOut }: { onSignOut: () => void }) {
   const qc = useQueryClient();
+  const { data: sub } = useSubscription();
+  const portal = useServerFn(createBillingPortalSession);
+  const checkout = useServerFn(createCheckoutSession);
+  const [portalLoading, setPortalLoading] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [showUpgrade, setShowUpgrade] = useState(false);
+  const isPro = sub?.plan === "pro";
+
+  async function openPortal() {
+    setPortalLoading(true);
+    try {
+      const { url } = await portal({ data: { returnUrl: window.location.origin + "/app" } });
+      if (url) window.location.href = url;
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "No se pudo abrir el portal");
+    } finally { setPortalLoading(false); }
+  }
+
+  async function startCheckout() {
+    setCheckoutLoading(true);
+    try {
+      const { url } = await checkout({ data: { returnUrl: window.location.origin + "/app" } });
+      if (url) window.location.href = url;
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "No se pudo iniciar el pago");
+      setCheckoutLoading(false);
+    }
+  }
+
   const { data: profile } = useQuery({
     queryKey: ["profile"],
     queryFn: async () => {
@@ -1436,9 +1480,64 @@ function SettingsTab({ onSignOut }: { onSignOut: () => void }) {
     <div className="mx-auto max-w-2xl space-y-5">
       <div>
         <h2 className="text-2xl font-bold tracking-tight">Ajustes</h2>
-        <p className="text-xs text-muted-foreground">Administra tu perfil y datos.</p>
+        <p className="text-xs text-muted-foreground">Administra tu perfil, suscripción y datos.</p>
       </div>
 
+      {/* Subscription */}
+      <div className={`relative overflow-hidden rounded-3xl border p-6 ${isPro ? "border-amber-400/40 bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-transparent" : "glass-card"}`}>
+        <div className="mb-4 flex items-center gap-2 text-sm font-semibold">
+          <Sparkles className={`h-4 w-4 ${isPro ? "text-amber-400" : "text-primary"}`} /> Suscripción
+        </div>
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <div className="text-lg font-bold">{isPro ? "Plan Pro ✨" : "Plan Gratis"}</div>
+            <div className="text-xs text-muted-foreground">
+              {isPro
+                ? sub?.currentPeriodEnd
+                  ? `Se renueva el ${new Date(sub.currentPeriodEnd).toLocaleDateString()}`
+                  : "Activo"
+                : "3 traducciones/día por mascota"}
+            </div>
+          </div>
+          {isPro ? (
+            <button
+              onClick={openPortal}
+              disabled={portalLoading}
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-5 py-2 text-sm font-medium hover:bg-accent/10 disabled:opacity-60"
+            >
+              {portalLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+              Gestionar
+            </button>
+          ) : (
+            <button
+              onClick={startCheckout}
+              disabled={checkoutLoading}
+              className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 px-5 py-2 text-sm font-bold text-black shadow-glow disabled:opacity-70"
+            >
+              {checkoutLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+              Hazte Pro
+            </button>
+          )}
+        </div>
+        {sub?.stripeConfigured === false && (
+          <p className="mt-3 rounded-xl border border-amber-400/30 bg-amber-500/10 p-3 text-xs text-amber-200">
+            Los pagos aún no están configurados. Añade <code>STRIPE_SECRET_KEY</code>, <code>STRIPE_PRICE_ID</code> y <code>STRIPE_WEBHOOK_SECRET</code> en los secretos del backend.
+          </p>
+        )}
+      </div>
+
+      {/* Weekly report */}
+      <div className="glass-card rounded-3xl p-6">
+        <div className="mb-4 flex items-center gap-2 text-sm font-semibold">
+          <LineChart className="h-4 w-4 text-accent" /> Informe semanal (Pro)
+        </div>
+        <p className="mb-3 text-xs text-muted-foreground">
+          Genera un informe imprimible con la evolución emocional de los últimos 7 días. Guárdalo como PDF o compártelo con tu veterinario.
+        </p>
+        <WeeklyReportButton isPro={isPro} onUpgrade={() => setShowUpgrade(true)} />
+      </div>
+
+      {/* Profile */}
       <div className="glass-card rounded-3xl p-6">
         <div className="mb-4 flex items-center gap-2 text-sm font-semibold"><SettingsIcon className="h-4 w-4 text-primary" /> Perfil</div>
         <div className="space-y-3">
@@ -1476,6 +1575,8 @@ function SettingsTab({ onSignOut }: { onSignOut: () => void }) {
           <LogOut className="h-4 w-4" /> Cerrar sesión
         </button>
       </div>
+
+      <UpgradeModal open={showUpgrade} onClose={() => setShowUpgrade(false)} />
     </div>
   );
 }
