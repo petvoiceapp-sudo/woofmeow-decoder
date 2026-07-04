@@ -1399,6 +1399,35 @@ function DiaryTab({ pets, avatarUrls, activePet, onChangeActive }: { pets: Pet[]
 /* -------- Settings Tab -------- */
 function SettingsTab({ onSignOut }: { onSignOut: () => void }) {
   const qc = useQueryClient();
+  const { data: sub } = useSubscription();
+  const portal = useServerFn(createBillingPortalSession);
+  const checkout = useServerFn(createCheckoutSession);
+  const [portalLoading, setPortalLoading] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [showUpgrade, setShowUpgrade] = useState(false);
+  const isPro = sub?.plan === "pro";
+
+  async function openPortal() {
+    setPortalLoading(true);
+    try {
+      const { url } = await portal({ data: { returnUrl: window.location.origin + "/app" } });
+      if (url) window.location.href = url;
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "No se pudo abrir el portal");
+    } finally { setPortalLoading(false); }
+  }
+
+  async function startCheckout() {
+    setCheckoutLoading(true);
+    try {
+      const { url } = await checkout({ data: { returnUrl: window.location.origin + "/app" } });
+      if (url) window.location.href = url;
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "No se pudo iniciar el pago");
+      setCheckoutLoading(false);
+    }
+  }
+
   const { data: profile } = useQuery({
     queryKey: ["profile"],
     queryFn: async () => {
@@ -1451,9 +1480,64 @@ function SettingsTab({ onSignOut }: { onSignOut: () => void }) {
     <div className="mx-auto max-w-2xl space-y-5">
       <div>
         <h2 className="text-2xl font-bold tracking-tight">Ajustes</h2>
-        <p className="text-xs text-muted-foreground">Administra tu perfil y datos.</p>
+        <p className="text-xs text-muted-foreground">Administra tu perfil, suscripción y datos.</p>
       </div>
 
+      {/* Subscription */}
+      <div className={`relative overflow-hidden rounded-3xl border p-6 ${isPro ? "border-amber-400/40 bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-transparent" : "glass-card"}`}>
+        <div className="mb-4 flex items-center gap-2 text-sm font-semibold">
+          <Sparkles className={`h-4 w-4 ${isPro ? "text-amber-400" : "text-primary"}`} /> Suscripción
+        </div>
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <div className="text-lg font-bold">{isPro ? "Plan Pro ✨" : "Plan Gratis"}</div>
+            <div className="text-xs text-muted-foreground">
+              {isPro
+                ? sub?.currentPeriodEnd
+                  ? `Se renueva el ${new Date(sub.currentPeriodEnd).toLocaleDateString()}`
+                  : "Activo"
+                : "3 traducciones/día por mascota"}
+            </div>
+          </div>
+          {isPro ? (
+            <button
+              onClick={openPortal}
+              disabled={portalLoading}
+              className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-5 py-2 text-sm font-medium hover:bg-accent/10 disabled:opacity-60"
+            >
+              {portalLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+              Gestionar
+            </button>
+          ) : (
+            <button
+              onClick={startCheckout}
+              disabled={checkoutLoading}
+              className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 px-5 py-2 text-sm font-bold text-black shadow-glow disabled:opacity-70"
+            >
+              {checkoutLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+              Hazte Pro
+            </button>
+          )}
+        </div>
+        {sub?.stripeConfigured === false && (
+          <p className="mt-3 rounded-xl border border-amber-400/30 bg-amber-500/10 p-3 text-xs text-amber-200">
+            Los pagos aún no están configurados. Añade <code>STRIPE_SECRET_KEY</code>, <code>STRIPE_PRICE_ID</code> y <code>STRIPE_WEBHOOK_SECRET</code> en los secretos del backend.
+          </p>
+        )}
+      </div>
+
+      {/* Weekly report */}
+      <div className="glass-card rounded-3xl p-6">
+        <div className="mb-4 flex items-center gap-2 text-sm font-semibold">
+          <LineChart className="h-4 w-4 text-accent" /> Informe semanal (Pro)
+        </div>
+        <p className="mb-3 text-xs text-muted-foreground">
+          Genera un informe imprimible con la evolución emocional de los últimos 7 días. Guárdalo como PDF o compártelo con tu veterinario.
+        </p>
+        <WeeklyReportButton isPro={isPro} onUpgrade={() => setShowUpgrade(true)} />
+      </div>
+
+      {/* Profile */}
       <div className="glass-card rounded-3xl p-6">
         <div className="mb-4 flex items-center gap-2 text-sm font-semibold"><SettingsIcon className="h-4 w-4 text-primary" /> Perfil</div>
         <div className="space-y-3">
@@ -1491,6 +1575,9 @@ function SettingsTab({ onSignOut }: { onSignOut: () => void }) {
           <LogOut className="h-4 w-4" /> Cerrar sesión
         </button>
       </div>
+
+      <UpgradeModal open={showUpgrade} onClose={() => setShowUpgrade(false)} />
     </div>
   );
+}
 }
