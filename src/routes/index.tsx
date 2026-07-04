@@ -165,13 +165,13 @@ function Landing() {
             </Link>
           </div>
 
-          {/* Premium */}
+          {/* Pro */}
           <div className="relative overflow-hidden rounded-3xl border border-primary/40 bg-gradient-to-b from-primary/15 to-transparent p-8 shadow-glow">
-            <div className="absolute right-4 top-4 inline-flex items-center gap-1 rounded-full bg-brand px-3 py-1 text-xs font-semibold text-primary-foreground">
-              <Crown className="h-3.5 w-3.5" /> Próximamente
+            <div className="absolute right-4 top-4 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 px-3 py-1 text-xs font-semibold text-black">
+              <Crown className="h-3.5 w-3.5" /> Recomendado
             </div>
             <div className="flex items-baseline justify-between">
-              <h3 className="text-xl font-semibold">Premium</h3>
+              <h3 className="text-xl font-semibold">Pro</h3>
               <div className="text-3xl font-bold">
                 4,99€<span className="text-sm font-normal text-muted-foreground">/mes</span>
               </div>
@@ -182,7 +182,12 @@ function Landing() {
                 <li key={f} className="flex gap-2"><Check className="h-4 w-4 text-primary" /> {f}</li>
               ))}
             </ul>
-            <WaitlistForm />
+            <Link to="/auth" className="mt-8 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 px-6 py-3 text-sm font-bold text-black shadow-glow">
+              <Crown className="h-4 w-4" /> Empezar con Pro
+            </Link>
+            <p className="mt-3 text-center text-[10px] text-muted-foreground">
+              Crea tu cuenta gratis y actualiza en un clic desde Ajustes. Pago seguro con Stripe.
+            </p>
           </div>
         </div>
       </section>
