@@ -1580,4 +1580,3 @@ function SettingsTab({ onSignOut }: { onSignOut: () => void }) {
     </div>
   );
 }
-}
