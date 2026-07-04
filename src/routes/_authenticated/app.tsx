@@ -15,8 +15,11 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { translateSound, type TranslationResult } from "@/lib/translate.functions";
 import { chatWithPet } from "@/lib/chat.functions";
+import { createCheckoutSession, createBillingPortalSession } from "@/lib/stripe.functions";
+import { useSubscription } from "@/hooks/useSubscription";
 import { Recorder } from "@/components/Recorder";
 import { OnboardingModal } from "@/components/OnboardingModal";
+import { WeeklyReportButton } from "@/components/WeeklyReport";
 import logo from "@/assets/logo.png";
 import dogCard from "@/assets/dog-card.png";
 import catCard from "@/assets/cat-card.png";
@@ -298,14 +301,11 @@ function PetSwitcher({ pets, active, avatarUrls, onChange }: { pets: Pet[]; acti
   );
 }
 
-/* -------- Freemium daily limit (localStorage, 3/día por mascota) -------- */
+/* -------- Freemium daily limit (server-backed premium) -------- */
 const FREE_DAILY_LIMIT = 3;
 function todayKey() { return new Date().toISOString().slice(0, 10); }
 function usageKey(petId: string | null | undefined) {
   return `pawlingo_uses_${petId ?? "guest"}_${todayKey()}`;
-}
-function isPremium(): boolean {
-  return typeof window !== "undefined" && localStorage.getItem("pawlingo_premium") === "1";
 }
 function getUsageCount(petId: string | null | undefined): number {
   if (typeof window === "undefined") return 0;
@@ -317,10 +317,11 @@ function bumpUsage(petId: string | null | undefined) {
   window.dispatchEvent(new Event("pawlingo:usage"));
 }
 function useUsage(petId: string | null | undefined) {
+  const { data: sub } = useSubscription();
+  const premium = sub?.plan === "pro";
   const [used, setUsed] = useState(() => getUsageCount(petId));
-  const [premium, setPremium] = useState(() => isPremium());
   useEffect(() => {
-    const sync = () => { setUsed(getUsageCount(petId)); setPremium(isPremium()); };
+    const sync = () => setUsed(getUsageCount(petId));
     sync();
     window.addEventListener("pawlingo:usage", sync);
     window.addEventListener("storage", sync);
