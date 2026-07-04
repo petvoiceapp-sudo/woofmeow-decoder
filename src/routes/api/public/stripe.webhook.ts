@@ -36,23 +36,20 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
         async function upsertFromSubscription(sub: import("stripe").Stripe.Subscription) {
-          const userId =
-            (sub.metadata?.supabase_user_id as string | undefined) ||
-            (typeof sub.customer !== "string"
-              ? (sub.customer.metadata?.supabase_user_id as string | undefined)
-              : undefined);
+          let userId = sub.metadata?.supabase_user_id as string | undefined;
+          if (!userId && typeof sub.customer !== "string" && !("deleted" in sub.customer)) {
+            userId = sub.customer.metadata?.supabase_user_id as string | undefined;
+          }
           if (!userId) {
-            // Fetch customer to resolve metadata
             const customer = await stripe.customers.retrieve(
               typeof sub.customer === "string" ? sub.customer : sub.customer.id,
             );
-            const resolved =
-              !("deleted" in customer) && (customer.metadata?.supabase_user_id as string | undefined);
-            if (!resolved) {
-              console.error("[stripe/webhook] Missing supabase_user_id metadata for sub", sub.id);
-              return;
+            if (!("deleted" in customer)) {
+              userId = customer.metadata?.supabase_user_id as string | undefined;
             }
-            await writeRow(resolved, sub);
+          }
+          if (!userId) {
+            console.error("[stripe/webhook] Missing supabase_user_id metadata for sub", sub.id);
             return;
           }
           await writeRow(userId, sub);
@@ -60,10 +57,12 @@ export const Route = createFileRoute("/api/public/stripe/webhook")({
 
         async function writeRow(userId: string, sub: import("stripe").Stripe.Subscription) {
           const active = ["active", "trialing"].includes(sub.status);
+          // In Stripe API 2024-06-20+, current_period_end lives on the first subscription item
+          const periodEndUnix =
+            (sub as unknown as { current_period_end?: number }).current_period_end ??
+            sub.items?.data?.[0]?.current_period_end;
           const periodEnd =
-            typeof sub.current_period_end === "number"
-              ? new Date(sub.current_period_end * 1000).toISOString()
-              : null;
+            typeof periodEndUnix === "number" ? new Date(periodEndUnix * 1000).toISOString() : null;
           const customerId = typeof sub.customer === "string" ? sub.customer : sub.customer.id;
 
           const { error } = await supabaseAdmin
