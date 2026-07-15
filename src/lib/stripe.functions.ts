@@ -22,6 +22,26 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
     const Stripe = (await import("stripe")).default;
     const stripe = new Stripe(secret, { apiVersion: "2024-06-20" as never });
 
+    let checkoutPriceId = priceId;
+    if (priceId.startsWith("prod_")) {
+      const prices = await stripe.prices.list({
+        product: priceId,
+        active: true,
+        limit: 10,
+      });
+      const recurringPrice = prices.data.find((price) => price.recurring && price.active);
+      if (!recurringPrice) {
+        throw new Error(
+          "Tu producto de Stripe no tiene un precio recurrente activo. Crea un precio mensual/anual o reemplaza STRIPE_PRICE_ID por un ID que empiece con price_...",
+        );
+      }
+      checkoutPriceId = recurringPrice.id;
+    } else if (!priceId.startsWith("price_")) {
+      throw new Error(
+        "STRIPE_PRICE_ID debe empezar con price_... o prod_... Revisa el ID guardado en los secretos de Stripe.",
+      );
+    }
+
     const { userId, supabase } = context;
     const { data: userRes } = await supabase.auth.getUser();
     const email = userRes.user?.email ?? undefined;
@@ -45,7 +65,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
       customer: customerId,
-      line_items: [{ price: priceId, quantity: 1 }],
+      line_items: [{ price: checkoutPriceId, quantity: 1 }],
       allow_promotion_codes: true,
       success_url: `${data.returnUrl}?checkout=success`,
       cancel_url: `${data.returnUrl}?checkout=cancel`,
