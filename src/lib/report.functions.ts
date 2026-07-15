@@ -17,8 +17,17 @@ export const getPeriodicReport = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
-    const { data: pro } = await supabase.rpc("has_pro_access", { _user_id: userId });
-    if (!pro) {
+    const { data: sub } = await supabase
+      .from("subscriptions")
+      .select("plan,status,current_period_end")
+      .eq("user_id", userId)
+      .maybeSingle();
+    const isPro =
+      !!sub &&
+      sub.plan === "pro" &&
+      ["active", "trialing"].includes(sub.status) &&
+      (!sub.current_period_end || new Date(sub.current_period_end) > new Date());
+    if (!isPro) {
       throw new Error("Esta función requiere el plan Pro.");
     }
 
