@@ -1554,7 +1554,14 @@ function SettingsTab({ onSignOut }: { onSignOut: () => void }) {
           <button onClick={save} disabled={saving} className="inline-flex items-center gap-2 rounded-full bg-brand px-5 py-2 text-sm font-medium text-primary-foreground shadow-glow disabled:opacity-60">
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Guardar
           </button>
-        </div>
+      </div>
+
+      <LanguageCard />
+      <HealthAlertsCard />
+      <RemindersCard pets={profile ? (undefined as never) : (undefined as never)} />
+      <VideoAnalysisCard isPro={isPro} onUpgrade={() => setShowUpgrade(true)} />
+
+
       </div>
 
       <div className="glass-card rounded-3xl p-6">
