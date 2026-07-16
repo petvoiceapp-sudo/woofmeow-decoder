@@ -147,50 +147,14 @@ function Landing() {
       {/* Pricing */}
       <section id="pricing" className="mx-auto max-w-6xl px-6 pb-24">
         <SectionHeader eyebrow="Precios" title="Empieza gratis. Sube a Premium cuando quieras." />
-        <div className="mt-10 grid gap-5 md:grid-cols-2">
-          {/* Free */}
-          <div className="glass rounded-3xl p-8 shadow-card">
-            <div className="flex items-baseline justify-between">
-              <h3 className="text-xl font-semibold">Gratis</h3>
-              <div className="text-3xl font-bold">0€</div>
-            </div>
-            <p className="mt-1 text-sm text-muted-foreground">Perfecto para empezar</p>
-            <ul className="mt-6 space-y-3 text-sm">
-              {FREE.map((f) => (
-                <li key={f} className="flex gap-2"><Check className="h-4 w-4 text-primary" /> {f}</li>
-              ))}
-            </ul>
-            <Link to="/auth" className="mt-8 flex w-full items-center justify-center rounded-full border border-border bg-card px-6 py-3 text-sm font-medium hover:bg-accent/10">
-              Empezar gratis
-            </Link>
-          </div>
-
-          {/* Pro */}
-          <div className="relative overflow-hidden rounded-3xl border border-primary/40 bg-gradient-to-b from-primary/15 to-transparent p-8 shadow-glow">
-            <div className="absolute right-4 top-4 inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 px-3 py-1 text-xs font-semibold text-black">
-              <Crown className="h-3.5 w-3.5" /> Recomendado
-            </div>
-            <div className="flex items-baseline justify-between">
-              <h3 className="text-xl font-semibold">Pro</h3>
-              <div className="text-3xl font-bold">
-                4,99€<span className="text-sm font-normal text-muted-foreground">/mes</span>
-              </div>
-            </div>
-            <p className="mt-1 text-sm text-muted-foreground">Todo lo de Gratis, más:</p>
-            <ul className="mt-6 space-y-3 text-sm">
-              {PREMIUM.map((f) => (
-                <li key={f} className="flex gap-2"><Check className="h-4 w-4 text-primary" /> {f}</li>
-              ))}
-            </ul>
-            <Link to="/auth" className="mt-8 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 px-6 py-3 text-sm font-bold text-black shadow-glow">
-              <Crown className="h-4 w-4" /> Empezar con Pro
-            </Link>
-            <p className="mt-3 text-center text-[10px] text-muted-foreground">
-              Crea tu cuenta gratis y actualiza en un clic desde Ajustes. Pago seguro con Stripe.
-            </p>
-          </div>
+        <div className="mt-10 glass rounded-3xl p-4 md:p-8 shadow-glow">
+          <StripePricingTable />
         </div>
+        <p className="mt-4 text-center text-xs text-muted-foreground">
+          Pago 100% seguro con Stripe · Cancela cuando quieras
+        </p>
       </section>
+
 
       {/* FAQ */}
       <section id="faq" className="mx-auto max-w-3xl px-6 pb-24">
