@@ -20,6 +20,8 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { Recorder } from "@/components/Recorder";
 import { OnboardingModal } from "@/components/OnboardingModal";
 import { WeeklyReportButton } from "@/components/WeeklyReport";
+import { useT, type Lang } from "@/lib/i18n";
+import { Globe, BellRing, HeartPulse, Video } from "lucide-react";
 import logo from "@/assets/logo.png";
 import dogCard from "@/assets/dog-card.png";
 import catCard from "@/assets/cat-card.png";
@@ -1552,7 +1554,15 @@ function SettingsTab({ onSignOut }: { onSignOut: () => void }) {
           <button onClick={save} disabled={saving} className="inline-flex items-center gap-2 rounded-full bg-brand px-5 py-2 text-sm font-medium text-primary-foreground shadow-glow disabled:opacity-60">
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Guardar
           </button>
-        </div>
+      </div>
+
+      <LanguageCard />
+      <HealthAlertsCard />
+      <RemindersCard />
+      <VideoAnalysisCard isPro={isPro} onUpgrade={() => setShowUpgrade(true)} />
+
+
+
       </div>
 
       <div className="glass-card rounded-3xl p-6">
@@ -1577,6 +1587,240 @@ function SettingsTab({ onSignOut }: { onSignOut: () => void }) {
       </div>
 
       <UpgradeModal open={showUpgrade} onClose={() => setShowUpgrade(false)} />
+    </div>
+  );
+}
+
+/* ---------- Language selector ---------- */
+function LanguageCard() {
+  const { lang, setLang, t } = useT();
+  return (
+    <div className="glass-card rounded-3xl p-6">
+      <div className="mb-4 flex items-center gap-2 text-sm font-semibold">
+        <Globe className="h-4 w-4 text-primary" /> {t("settings.language")}
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        {(["es", "en"] as Lang[]).map((l) => (
+          <button
+            key={l}
+            onClick={() => setLang(l)}
+            className={`rounded-2xl border px-4 py-3 text-sm font-medium transition ${
+              lang === l
+                ? "border-primary/60 bg-primary/10 text-foreground shadow-glow"
+                : "border-border bg-card/50 text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {l === "es" ? "🇪🇸  Español" : "🇬🇧  English"}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Health alerts (last 30 translations) ---------- */
+type HealthFlag = { level: "info" | "warn" | "urgent"; title: string; detail: string };
+function analyzeHealth(rows: Translation[]): HealthFlag[] {
+  const flags: HealthFlag[] = [];
+  if (rows.length < 3) return flags;
+  const bucket = (rx: RegExp) => rows.filter((r) => rx.test(((r.mood ?? "") + " " + (r.intent ?? "")).toLowerCase())).length;
+  const total = rows.length;
+  const fear = bucket(/(miedo|asust|ansios|nervi|estres|defens)/);
+  const pain = bucket(/(dolor|herid|molest)/);
+  const itch = bucket(/(rasc|pica|prurit|comez|piel)/);
+  const hunger = bucket(/(hambr|apetit|sed|comid)/);
+  const sad = bucket(/(triste|solit|solo|aburri)/);
+  if (pain / total > 0.15) flags.push({ level: "urgent", title: "Posible malestar físico", detail: `${pain} de ${total} análisis sugieren dolor. Consulta con tu veterinario.` });
+  if (itch / total > 0.2) flags.push({ level: "warn", title: "Picazón recurrente", detail: `${itch} señales de rascado/piel. Revisa alergias, pulgas o dermatitis.` });
+  if (fear / total > 0.35) flags.push({ level: "warn", title: "Ansiedad frecuente", detail: `${fear} análisis con miedo/estrés. Considera enriquecimiento y rutina estable.` });
+  if (hunger / total > 0.35) flags.push({ level: "info", title: "Muchas demandas de comida", detail: `${hunger} señales de hambre/sed. Revisa horarios y ración diaria.` });
+  if (sad / total > 0.3) flags.push({ level: "info", title: "Estado bajo", detail: `${sad} análisis con tristeza o aburrimiento. Aumenta juego e interacción.` });
+  return flags;
+}
+function HealthAlertsCard() {
+  const { data: rows } = useQuery({
+    queryKey: ["health-translations"],
+    queryFn: async () => {
+      const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+      const { data } = await supabase
+        .from("translations")
+        .select("id,pet_id,species,mood,intent,translation,confidence,scientific_basis,tips,created_at")
+        .gte("created_at", since)
+        .order("created_at", { ascending: false })
+        .limit(60);
+      return (data ?? []) as Translation[];
+    },
+    staleTime: 60_000,
+  });
+  const flags = useMemo(() => analyzeHealth(rows ?? []), [rows]);
+  return (
+    <div className="glass-card rounded-3xl p-6">
+      <div className="mb-4 flex items-center gap-2 text-sm font-semibold">
+        <HeartPulse className="h-4 w-4 text-rose-400" /> Alertas de salud y bienestar
+      </div>
+      {!rows || rows.length < 3 ? (
+        <p className="text-xs text-muted-foreground">Necesitas al menos 3 traducciones para generar alertas basadas en patrones.</p>
+      ) : flags.length === 0 ? (
+        <div className="rounded-2xl border border-emerald-400/30 bg-emerald-500/5 p-4 text-sm text-emerald-200">
+          ✓ Sin señales preocupantes en los últimos 30 días. Sigue observando a tu mascota.
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {flags.map((f, i) => {
+            const styles =
+              f.level === "urgent"
+                ? "border-red-500/50 bg-red-500/10 text-red-100"
+                : f.level === "warn"
+                ? "border-amber-500/40 bg-amber-500/10 text-amber-100"
+                : "border-sky-500/40 bg-sky-500/10 text-sky-100";
+            return (
+              <div key={i} className={`rounded-2xl border p-4 ${styles}`}>
+                <div className="text-sm font-semibold">{f.title}</div>
+                <div className="mt-1 text-xs opacity-90">{f.detail}</div>
+              </div>
+            );
+          })}
+          <p className="pt-1 text-[11px] text-muted-foreground">
+            Estas alertas son orientativas y no reemplazan el diagnóstico veterinario.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ---------- Local reminders (browser notifications) ---------- */
+type Reminder = { id: string; label: string; time: string; enabled: boolean };
+const REMINDERS_KEY = "pawlingo.reminders";
+function loadReminders(): Reminder[] {
+  try {
+    const raw = localStorage.getItem(REMINDERS_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return [
+    { id: "feed-am", label: "Desayuno", time: "08:00", enabled: false },
+    { id: "walk", label: "Paseo", time: "18:00", enabled: false },
+    { id: "feed-pm", label: "Cena", time: "20:00", enabled: false },
+  ];
+}
+function RemindersCard() {
+  const [items, setItems] = useState<Reminder[]>(() => (typeof window === "undefined" ? [] : loadReminders()));
+  const [perm, setPerm] = useState<NotificationPermission>("default");
+  useEffect(() => {
+    if (typeof Notification !== "undefined") setPerm(Notification.permission);
+  }, []);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try { localStorage.setItem(REMINDERS_KEY, JSON.stringify(items)); } catch {}
+  }, [items]);
+  // Poll every minute and fire notifications for enabled reminders
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const fired = new Set<string>();
+    const tick = () => {
+      const now = new Date();
+      const hhmm = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+      const key = now.toISOString().slice(0, 10) + "|" + hhmm;
+      for (const r of items) {
+        if (!r.enabled || r.time !== hhmm) continue;
+        const fk = key + "|" + r.id;
+        if (fired.has(fk)) continue;
+        fired.add(fk);
+        if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+          new Notification("Pawlingo — " + r.label, { body: "Hora de: " + r.label });
+        }
+      }
+    };
+    const id = window.setInterval(tick, 30_000);
+    return () => window.clearInterval(id);
+  }, [items]);
+
+  async function requestPerm() {
+    if (typeof Notification === "undefined") return toast.error("Tu navegador no soporta notificaciones");
+    const p = await Notification.requestPermission();
+    setPerm(p);
+    if (p === "granted") toast.success("Notificaciones activadas");
+  }
+  return (
+    <div className="glass-card rounded-3xl p-6">
+      <div className="mb-4 flex items-center gap-2 text-sm font-semibold">
+        <BellRing className="h-4 w-4 text-amber-400" /> Recordatorios
+      </div>
+      {perm !== "granted" && (
+        <button
+          onClick={requestPerm}
+          className="mb-3 w-full rounded-2xl border border-amber-400/40 bg-amber-500/10 px-4 py-2 text-sm text-amber-100 hover:bg-amber-500/15"
+        >
+          Activar notificaciones del navegador
+        </button>
+      )}
+      <div className="space-y-2">
+        {items.map((r, idx) => (
+          <div key={r.id} className="flex items-center gap-2 rounded-2xl border border-border bg-card/50 p-3">
+            <input
+              value={r.label}
+              onChange={(e) => setItems((prev) => prev.map((p, i) => (i === idx ? { ...p, label: e.target.value } : p)))}
+              className="flex-1 rounded-lg bg-transparent px-2 py-1 text-sm outline-none focus:bg-input/40"
+            />
+            <input
+              type="time"
+              value={r.time}
+              onChange={(e) => setItems((prev) => prev.map((p, i) => (i === idx ? { ...p, time: e.target.value } : p)))}
+              className="rounded-lg border border-border bg-input/40 px-2 py-1 text-sm outline-none"
+            />
+            <button
+              onClick={() => setItems((prev) => prev.map((p, i) => (i === idx ? { ...p, enabled: !p.enabled } : p)))}
+              className={`rounded-full px-3 py-1 text-xs font-medium transition ${
+                r.enabled ? "bg-emerald-500/20 text-emerald-200" : "bg-muted/40 text-muted-foreground"
+              }`}
+            >
+              {r.enabled ? "On" : "Off"}
+            </button>
+            <button
+              onClick={() => setItems((prev) => prev.filter((_, i) => i !== idx))}
+              className="rounded-full p-1 text-muted-foreground hover:text-destructive"
+              title="Eliminar"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          </div>
+        ))}
+      </div>
+      <button
+        onClick={() => setItems((prev) => [...prev, { id: crypto.randomUUID(), label: "Nuevo recordatorio", time: "12:00", enabled: false }])}
+        className="mt-3 inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-4 py-2 text-xs text-muted-foreground hover:text-foreground"
+      >
+        <Plus className="h-3.5 w-3.5" /> Añadir recordatorio
+      </button>
+      <p className="mt-2 text-[11px] text-muted-foreground">
+        Los recordatorios funcionan mientras Pawlingo esté abierto. Para alertas en segundo plano, instala la app (PWA) desde el menú de tu navegador.
+      </p>
+    </div>
+  );
+}
+
+/* ---------- Video analysis (Pro teaser) ---------- */
+function VideoAnalysisCard({ isPro, onUpgrade }: { isPro: boolean; onUpgrade: () => void }) {
+  return (
+    <div className="glass-card rounded-3xl p-6">
+      <div className="mb-2 flex items-center gap-2 text-sm font-semibold">
+        <Video className="h-4 w-4 text-fuchsia-400" /> Análisis de video (próximamente)
+      </div>
+      <p className="mb-3 text-xs text-muted-foreground">
+        Sube un video corto de tu mascota y analizaremos postura, movimiento de cola y expresión facial además del sonido.
+      </p>
+      {isPro ? (
+        <div className="rounded-2xl border border-fuchsia-400/30 bg-fuchsia-500/10 p-3 text-xs text-fuchsia-100">
+          Estás en Pro. Te avisaremos por email cuando el análisis de video esté disponible.
+        </div>
+      ) : (
+        <button
+          onClick={onUpgrade}
+          className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-fuchsia-500 via-violet-500 to-indigo-500 px-4 py-2 text-xs font-bold text-white shadow-glow"
+        >
+          Reservar acceso Pro
+        </button>
+      )}
     </div>
   );
 }
