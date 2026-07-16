@@ -20,6 +20,8 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { Recorder } from "@/components/Recorder";
 import { OnboardingModal } from "@/components/OnboardingModal";
 import { WeeklyReportButton } from "@/components/WeeklyReport";
+import { useT, type Lang } from "@/lib/i18n";
+import { Globe, BellRing, HeartPulse, Video } from "lucide-react";
 import logo from "@/assets/logo.png";
 import dogCard from "@/assets/dog-card.png";
 import catCard from "@/assets/cat-card.png";
