@@ -260,6 +260,23 @@ function WaitlistForm() {
   );
 }
 
+function StripePricingTable() {
+  useEffect(() => {
+    const id = "stripe-pricing-table-js";
+    if (document.getElementById(id)) return;
+    const s = document.createElement("script");
+    s.id = id;
+    s.async = true;
+    s.src = "https://js.stripe.com/v3/pricing-table.js";
+    document.body.appendChild(s);
+  }, []);
+  // @ts-expect-error - Stripe custom element
+  return <stripe-pricing-table
+    pricing-table-id="prctbl_1TtjsmBhWru5s2tMRWHukfpJ"
+    publishable-key="pk_live_51TnAQ9BhWru5s2tMzCzwglAFtcaLPiJ5gWVL1yCEXglG31CdgESwcImyg7rlDIdvqgKijnZshgZz2k1CMMEnMPDU00bQgYBL0S"
+  />;
+}
+
 const HOW = [
   { icon: Dog, title: "Registra a tu mascota", desc: "Añade su nombre, especie y foto opcional. Puedes registrar todas las que quieras." },
   { icon: Mic, title: "Graba 3-5 segundos", desc: "Toca el micrófono cuando ladre o maúlle. Añade postura y contexto para mayor precisión." },
