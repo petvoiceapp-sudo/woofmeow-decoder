@@ -1558,8 +1558,9 @@ function SettingsTab({ onSignOut }: { onSignOut: () => void }) {
 
       <LanguageCard />
       <HealthAlertsCard />
-      <RemindersCard pets={profile ? (undefined as never) : (undefined as never)} />
+      <RemindersCard />
       <VideoAnalysisCard isPro={isPro} onUpgrade={() => setShowUpgrade(true)} />
+
 
 
       </div>
